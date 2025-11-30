@@ -1,0 +1,204 @@
+[gd_scene load_steps=20 format=3 uid="uid://fxx0suqvxhcx"]
+
+[ext_resource type="Script" uid="uid://bqc0dqkaadgec" path="res://scripts/game.gd" id="1_80nbo"]
+[ext_resource type="PackedScene" uid="uid://bakbl1cs5klsx" path="res://scenes/player.tscn" id="2_e2o6t"]
+[ext_resource type="Script" uid="uid://rhtpchxm11nb" path="res://scripts/world/CameraController.gd" id="3_fc0e3"]
+[ext_resource type="Script" uid="uid://goqml2xgw2fm" path="res://scripts/world/mapmanager.gd" id="3_feb5d"]
+[ext_resource type="Script" uid="uid://cmm1nfrsj33t3" path="res://scripts/ui/UIManager.gd" id="5_7jktm"]
+[ext_resource type="Texture2D" uid="uid://ws8cagu4ulg6" path="res://assets/ui/emote1.png" id="6_80cx4"]
+[ext_resource type="Texture2D" uid="uid://bgha16vififfa" path="res://assets/ui/report.png" id="6_iotsf"]
+[ext_resource type="Texture2D" uid="uid://b7y2k6uqguw7m" path="res://assets/ui/pose1.png" id="6_ryrav"]
+[ext_resource type="Texture2D" uid="uid://clkhnou5n6dha" path="res://assets/ui/emote2.png" id="7_e8heu"]
+[ext_resource type="Texture2D" uid="uid://bygvffp02g0cw" path="res://assets/ui/directory.png" id="7_lc2xo"]
+[ext_resource type="Texture2D" uid="uid://drgrk4vvica21" path="res://assets/ui/ignoreuser.png" id="8_215e1"]
+[ext_resource type="Texture2D" uid="uid://o8cdaxw7c8li" path="res://assets/ui/speechbubble.png" id="8_rvswv"]
+[ext_resource type="Texture2D" uid="uid://qs1vp8tu0oyw" path="res://assets/ui/book.png" id="9_boyg6"]
+[ext_resource type="Texture2D" uid="uid://bdgnerrompdb4" path="res://assets/ui/pose2.png" id="10_7sc4i"]
+[ext_resource type="Texture2D" uid="uid://cwjs84a2m4xbd" path="res://assets/ui/sound1.png" id="11_80cx4"]
+[ext_resource type="Texture2D" uid="uid://bs05ve1xtr2xp" path="res://assets/ui/sound2.png" id="12_e8heu"]
+[ext_resource type="Script" uid="uid://dh84snpvlogur" path="res://scripts/ui/ChatSystem.gd" id="17_85qyi"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_85qyi"]
+bg_color = Color(0.105882354, 0.105882354, 0.105882354, 0.7372549)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ewbju"]
+bg_color = Color(0, 0, 0, 0.68235296)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_80nbo")
+
+[node name="Player" parent="." instance=ExtResource("2_e2o6t")]
+z_index = 10
+
+[node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("3_fc0e3")
+
+[node name="MapManager" type="Node" parent="."]
+script = ExtResource("3_feb5d")
+
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("5_7jktm")
+
+[node name="ChatBar" type="Control" parent="UI"]
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 3
+anchor_top = 0.9513889
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 35.0
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_horizontal = 3
+metadata/_edit_use_anchors_ = true
+
+[node name="ColorRect" type="ColorRect" parent="UI/ChatBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.54215676, 0.25975576, 0.13350976, 1)
+
+[node name="ChatInput" type="TextEdit" parent="UI/ChatBar"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 0
+offset_left = 72.0
+offset_right = 472.0
+offset_bottom = 35.0
+caret_blink = true
+
+[node name="LeftButtons" type="Control" parent="UI/ChatBar"]
+layout_mode = 1
+anchors_preset = 0
+
+[node name="EmoteButton" type="TextureButton" parent="UI/ChatBar/LeftButtons"]
+custom_minimum_size = Vector2(30, 16)
+layout_mode = 0
+offset_left = 2.0
+offset_right = 27.0
+offset_bottom = 34.0
+toggle_mode = true
+texture_normal = ExtResource("6_80cx4")
+texture_pressed = ExtResource("7_e8heu")
+stretch_mode = 5
+
+[node name="ChatlogButton" type="TextureButton" parent="UI/ChatBar/LeftButtons"]
+custom_minimum_size = Vector2(30, 16)
+layout_mode = 0
+offset_left = 39.0
+offset_right = 69.0
+offset_bottom = 34.0
+toggle_mode = true
+texture_normal = ExtResource("8_rvswv")
+texture_pressed = ExtResource("9_boyg6")
+stretch_mode = 5
+
+[node name="RightButtons" type="Control" parent="UI/ChatBar"]
+layout_mode = 1
+anchors_preset = 0
+
+[node name="ReportButton" type="TextureButton" parent="UI/ChatBar/RightButtons"]
+custom_minimum_size = Vector2(67, 29)
+layout_mode = 0
+offset_left = 480.0
+offset_right = 547.0
+offset_bottom = 34.0
+texture_normal = ExtResource("6_iotsf")
+stretch_mode = 5
+
+[node name="DirectoryButton" type="TextureButton" parent="UI/ChatBar/RightButtons"]
+custom_minimum_size = Vector2(67, 29)
+layout_mode = 0
+offset_left = 552.0
+offset_right = 619.0
+offset_bottom = 34.0
+texture_normal = ExtResource("7_lc2xo")
+stretch_mode = 5
+
+[node name="IgnoreButton" type="TextureButton" parent="UI/ChatBar/RightButtons"]
+custom_minimum_size = Vector2(67, 29)
+layout_mode = 0
+offset_left = 624.0
+offset_right = 691.0
+offset_bottom = 34.0
+texture_normal = ExtResource("8_215e1")
+stretch_mode = 5
+
+[node name="PoseButton" type="TextureButton" parent="UI/ChatBar/RightButtons"]
+custom_minimum_size = Vector2(67, 29)
+layout_mode = 0
+offset_left = 984.0
+offset_right = 1051.0
+offset_bottom = 34.0
+toggle_mode = true
+texture_normal = ExtResource("6_ryrav")
+texture_pressed = ExtResource("10_7sc4i")
+stretch_mode = 5
+
+[node name="TopRightButtons" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 3.0
+offset_top = 2.0
+offset_right = 43.0
+offset_bottom = 42.0
+
+[node name="SoundButton" type="TextureButton" parent="UI/TopRightButtons"]
+custom_minimum_size = Vector2(19, 16)
+layout_mode = 0
+offset_right = 19.0
+offset_bottom = 16.0
+toggle_mode = true
+texture_normal = ExtResource("11_80cx4")
+texture_pressed = ExtResource("12_e8heu")
+stretch_mode = 3
+
+[node name="ChatLogWindow" type="Panel" parent="UI"]
+custom_minimum_size = Vector2(300, 400)
+anchors_preset = -1
+anchor_left = 0.0015625
+anchor_top = 0.12138889
+anchor_right = 0.25375
+anchor_bottom = 0.9513889
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_85qyi")
+metadata/_edit_use_anchors_ = true
+
+[node name="ScrollContainer" type="ScrollContainer" parent="UI/ChatLogWindow"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="Messages" type="VBoxContainer" parent="UI/ChatLogWindow/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="LocationLabel" type="Label" parent="UI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -102.0
+offset_right = -6.0
+offset_bottom = 23.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(0.92984587, 0.9298463, 0, 1)
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_ewbju")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ChatSystem" type="CanvasLayer" parent="."]
+script = ExtResource("17_85qyi")

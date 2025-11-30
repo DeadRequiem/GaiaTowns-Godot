@@ -1,0 +1,41 @@
+[gd_scene load_steps=5 format=3 uid="uid://dke6ysvy5lb2d"]
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_tc5rv"]
+a = Vector2(0, 1)
+b = Vector2(1535, 1)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_0dfn0"]
+a = Vector2(1.5, -760.5)
+b = Vector2(1.5, 773.5)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_s6ru4"]
+b = Vector2(1536, 0)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_1d5oi"]
+b = Vector2(1, 1536)
+
+[node name="Edges" type="Node2D"]
+
+[node name="NorthEdge" type="Area2D" parent="."]
+collision_layer = 0
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NorthEdge"]
+shape = SubResource("SegmentShape2D_tc5rv")
+
+[node name="EastEdge" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EastEdge"]
+position = Vector2(1533.5, 762.5)
+shape = SubResource("SegmentShape2D_0dfn0")
+
+[node name="SouthEdge" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SouthEdge"]
+position = Vector2(0, 1535)
+shape = SubResource("SegmentShape2D_s6ru4")
+
+[node name="WestEdge" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WestEdge"]
+shape = SubResource("SegmentShape2D_1d5oi")

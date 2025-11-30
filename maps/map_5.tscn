@@ -1,0 +1,56 @@
+[gd_scene load_steps=6 format=3 uid="uid://gn5hvgvwy2y6"]
+
+[ext_resource type="Texture2D" uid="uid://cs8kgrppejrl3" path="res://assets/maps/mapCenter.png" id="1_0dfn0"]
+[ext_resource type="PackedScene" uid="uid://vl4xsnwqkwq8" path="res://objects/Fountain.tscn" id="2_tc5rv"]
+[ext_resource type="PackedScene" uid="uid://dknwjuvf4a10k" path="res://objects/Bush.tscn" id="3_0dfn0"]
+[ext_resource type="PackedScene" uid="uid://b86sh33ap6kko" path="res://objects/Tree.tscn" id="4_s6ru4"]
+[ext_resource type="PackedScene" uid="uid://dke6ysvy5lb2d" path="res://objects/edges.tscn" id="5_0dfn0"]
+
+[node name="Map5" type="Node2D"]
+
+[node name="Background" type="Sprite2D" parent="."]
+z_index = -100
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("1_0dfn0")
+centered = false
+
+[node name="SpawnPoint" type="Marker2D" parent="."]
+position = Vector2(737, 1266)
+
+[node name="Objects" type="Node2D" parent="."]
+
+[node name="Fountain" parent="Objects" instance=ExtResource("2_tc5rv")]
+z_index = 1
+position = Vector2(474, 454)
+
+[node name="Bush" parent="Objects" instance=ExtResource("3_0dfn0")]
+position = Vector2(281, 675)
+
+[node name="Bush2" parent="Objects" instance=ExtResource("3_0dfn0")]
+position = Vector2(668, 716)
+
+[node name="Bush3" parent="Objects" instance=ExtResource("3_0dfn0")]
+position = Vector2(901, 515)
+
+[node name="Bush4" parent="Objects" instance=ExtResource("3_0dfn0")]
+position = Vector2(711, 274)
+
+[node name="Bush5" parent="Objects" instance=ExtResource("3_0dfn0")]
+position = Vector2(384, 261)
+
+[node name="Bush6" parent="Objects" instance=ExtResource("3_0dfn0")]
+position = Vector2(152, 428)
+
+[node name="Tree" parent="Objects" instance=ExtResource("4_s6ru4")]
+position = Vector2(37, 943)
+
+[node name="Tree2" parent="Objects" instance=ExtResource("4_s6ru4")]
+position = Vector2(862, 1070)
+
+[node name="Tree3" parent="Objects" instance=ExtResource("4_s6ru4")]
+position = Vector2(791, 133)
+
+[node name="Tree4" parent="Objects" instance=ExtResource("4_s6ru4")]
+position = Vector2(26, 230)
+
+[node name="Edges" parent="." instance=ExtResource("5_0dfn0")]

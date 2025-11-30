@@ -1,0 +1,63 @@
+[gd_scene load_steps=6 format=3 uid="uid://4lnyij7vfxlm"]
+
+[ext_resource type="Texture2D" uid="uid://3ay0b34ldsg6" path="res://assets/maps/map_3.png" id="1_ebk6l"]
+[ext_resource type="PackedScene" uid="uid://b86sh33ap6kko" path="res://objects/Tree.tscn" id="3_wq2xb"]
+[ext_resource type="PackedScene" uid="uid://dknwjuvf4a10k" path="res://objects/Bush.tscn" id="4_75bwh"]
+[ext_resource type="PackedScene" uid="uid://csxbf1dyk5f4j" path="res://objects/Rock.tscn" id="5_ebk6l"]
+[ext_resource type="PackedScene" uid="uid://dke6ysvy5lb2d" path="res://objects/edges.tscn" id="5_wq2xb"]
+
+[node name="Map3" type="Node2D"]
+
+[node name="Background" type="Sprite2D" parent="."]
+z_index = -100
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("1_ebk6l")
+centered = false
+
+[node name="SpawnPoint" type="Marker2D" parent="."]
+position = Vector2(770, 1141)
+
+[node name="Objects" type="Node2D" parent="."]
+scale = Vector2(1.5, 1.5)
+
+[node name="Tree" parent="Objects" instance=ExtResource("3_wq2xb")]
+position = Vector2(470, 748.6667)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Tree2" parent="Objects" instance=ExtResource("3_wq2xb")]
+position = Vector2(645.3333, 426)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Tree3" parent="Objects" instance=ExtResource("3_wq2xb")]
+position = Vector2(506.6667, 16)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Tree4" parent="Objects" instance=ExtResource("3_wq2xb")]
+position = Vector2(21.333328, 208)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Bush" parent="Objects" instance=ExtResource("4_75bwh")]
+position = Vector2(-38, 491.33334)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Bush2" parent="Objects" instance=ExtResource("4_75bwh")]
+position = Vector2(254, 668.6667)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Bush3" parent="Objects" instance=ExtResource("4_75bwh")]
+position = Vector2(709.3334, 172)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Rock" parent="Objects" instance=ExtResource("5_ebk6l")]
+position = Vector2(448.6667, 585.3334)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Rock2" parent="Objects" instance=ExtResource("5_ebk6l")]
+position = Vector2(700, 298)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Rock3" parent="Objects" instance=ExtResource("5_ebk6l")]
+position = Vector2(308, 284.66666)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Edges" parent="." instance=ExtResource("5_wq2xb")]

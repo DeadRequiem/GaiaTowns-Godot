@@ -1,0 +1,43 @@
+[gd_scene load_steps=6 format=3 uid="uid://dhorlowrnqd3v"]
+
+[ext_resource type="Script" uid="uid://ccb0rqytjwvev" path="res://scripts/player/remoteplayer.gd" id="1_v5duq"]
+[ext_resource type="Script" uid="uid://ch0kk8y6avr4w" path="res://scripts/player/playerinput.gd" id="2_135ng"]
+[ext_resource type="Script" uid="uid://dokn6l11q3u21" path="res://scripts/player/playeravatar.gd" id="3_unery"]
+[ext_resource type="Script" uid="uid://lglkmn6d76tf" path="res://scripts/player/UsernameLabel.gd" id="4_13u1c"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_onrkg"]
+size = Vector2(122, 23)
+
+[node name="RemotePlayer" type="CharacterBody2D"]
+collision_mask = 2
+script = ExtResource("1_v5duq")
+
+[node name="PlayerInput" type="Node" parent="."]
+script = ExtResource("2_135ng")
+
+[node name="PlayerAvatar" type="Node" parent="." node_paths=PackedStringArray("torso_sprite", "legs_sprite", "http_request")]
+script = ExtResource("3_unery")
+torso_sprite = NodePath("../Torso")
+legs_sprite = NodePath("../Legs")
+http_request = NodePath("../HTTPRequest")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 63.5)
+shape = SubResource("RectangleShape2D_onrkg")
+
+[node name="Torso" type="Sprite2D" parent="."]
+
+[node name="Legs" type="Sprite2D" parent="."]
+
+[node name="HTTPRequest" type="HTTPRequest" parent="."]
+use_threads = true
+accept_gzip = false
+
+[node name="UsernameLabel" type="Label" parent="."]
+offset_left = -61.0
+offset_top = 75.0
+offset_right = 61.0
+offset_bottom = 98.0
+text = "TestUsername"
+horizontal_alignment = 1
+script = ExtResource("4_13u1c")

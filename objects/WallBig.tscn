@@ -1,0 +1,54 @@
+[gd_scene load_steps=8 format=3 uid="uid://dli4yso3uh7i2"]
+
+[ext_resource type="Texture2D" uid="uid://cjv3c7vdt21u0" path="res://assets/objects/walls/WallBig.png" id="1_5hd5m"]
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_5hd5m"]
+a = Vector2(0.6666667, 18)
+b = Vector2(0.6666667, 82.66667)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_quvkm"]
+a = Vector2(24, 92.66667)
+b = Vector2(1.3333334, 81.333336)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_mocvi"]
+a = Vector2(60.666668, 74)
+b = Vector2(22.666668, 92.66667)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_tf55x"]
+a = Vector2(59.333336, 12.666667)
+b = Vector2(60.666668, 74)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_70xi7"]
+a = Vector2(34.666668, 0)
+b = Vector2(58.666668, 12.666667)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_t45ot"]
+a = Vector2(0.6666667, 20.666668)
+b = Vector2(37.333336, 1.3333334)
+
+[node name="WallBig" type="Node2D"]
+scale = Vector2(1.5, 1.5)
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_5hd5m")
+centered = false
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("SegmentShape2D_5hd5m")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("SegmentShape2D_quvkm")
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("SegmentShape2D_mocvi")
+
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("SegmentShape2D_tf55x")
+
+[node name="CollisionShape2D5" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("SegmentShape2D_70xi7")
+
+[node name="CollisionShape2D6" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("SegmentShape2D_t45ot")

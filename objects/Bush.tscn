@@ -1,0 +1,91 @@
+[gd_scene load_steps=17 format=3 uid="uid://dknwjuvf4a10k"]
+
+[ext_resource type="Script" uid="uid://dmlyt5aqqt1eu" path="res://scripts/misc/interact.gd" id="1_ganej"]
+[ext_resource type="Texture2D" uid="uid://bgho5x3ffjh0c" path="res://assets/objects/bush/Bush_1.png" id="2_6v2ex"]
+[ext_resource type="Texture2D" uid="uid://cvaej585ycedm" path="res://assets/objects/bush/Bush_2.png" id="3_ucygp"]
+[ext_resource type="Texture2D" uid="uid://b7dyi58g6gop" path="res://assets/objects/bush/Bush_3.png" id="4_ganej"]
+[ext_resource type="Texture2D" uid="uid://bt8wjsv67x170" path="res://assets/objects/bush/Bush_4.png" id="5_grynd"]
+[ext_resource type="Texture2D" uid="uid://blo322vnwmkm6" path="res://assets/objects/bush/Bush_5.png" id="6_rotf5"]
+[ext_resource type="Texture2D" uid="uid://x4ue40v6bm4k" path="res://assets/objects/bush/Bush_6.png" id="7_58wfs"]
+[ext_resource type="Texture2D" uid="uid://bg8f3m6odvfyj" path="res://assets/objects/bush/Bush_7.png" id="8_6pvd6"]
+[ext_resource type="Texture2D" uid="uid://dd4mlemrotxxv" path="res://assets/objects/bush/Bush_8.png" id="9_n38jf"]
+[ext_resource type="Texture2D" uid="uid://b4211wstfm8eo" path="res://assets/objects/bush/Bush_9.png" id="10_kai7v"]
+[ext_resource type="Texture2D" uid="uid://d1odcxqj3fvsd" path="res://assets/objects/bush/Bush_10.png" id="11_mimcj"]
+[ext_resource type="Texture2D" uid="uid://c6ah44stoudxf" path="res://assets/objects/bush/Bush_11.png" id="12_mi1g7"]
+[ext_resource type="Texture2D" uid="uid://epnqroi2l3u3" path="res://assets/objects/bush/Bush_12.png" id="13_bh1mh"]
+[ext_resource type="Texture2D" uid="uid://bmvmpmssl6wqe" path="res://assets/objects/bush/Bush_13.png" id="14_fawei"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_rgm70"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_6v2ex")
+}],
+"loop": true,
+"name": &"Idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_6v2ex")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_ucygp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_ganej")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_grynd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_rotf5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_58wfs")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_6pvd6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_n38jf")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_kai7v")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_mimcj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_mi1g7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_bh1mh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_fawei")
+}],
+"loop": false,
+"name": &"Interact",
+"speed": 15.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rgm70"]
+size = Vector2(70, 58)
+
+[node name="Bush" type="Node2D"]
+script = ExtResource("1_ganej")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_rgm70")
+animation = &"Interact"
+frame = 12
+frame_progress = 1.0
+centered = false
+
+[node name="InteractArea" type="Area2D" parent="."]
+position = Vector2(211, 159)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea"]
+position = Vector2(33, 107)
+shape = SubResource("RectangleShape2D_rgm70")

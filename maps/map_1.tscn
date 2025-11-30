@@ -1,0 +1,59 @@
+[gd_scene load_steps=6 format=3 uid="uid://c1777e24re55l"]
+
+[ext_resource type="Texture2D" uid="uid://bqpbq4lmvecld" path="res://assets/maps/map_1.png" id="1_hm8ck"]
+[ext_resource type="PackedScene" uid="uid://dknwjuvf4a10k" path="res://objects/Bush.tscn" id="4_063jp"]
+[ext_resource type="PackedScene" uid="uid://dke6ysvy5lb2d" path="res://objects/edges.tscn" id="5_5565n"]
+[ext_resource type="PackedScene" uid="uid://csxbf1dyk5f4j" path="res://objects/Rock.tscn" id="5_hm8ck"]
+[ext_resource type="PackedScene" uid="uid://b86sh33ap6kko" path="res://objects/Tree.tscn" id="5_jkpbc"]
+
+[node name="Map1" type="Node2D"]
+
+[node name="Background" type="Sprite2D" parent="."]
+z_index = -100
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("1_hm8ck")
+centered = false
+
+[node name="SpawnPoint" type="Marker2D" parent="."]
+position = Vector2(755, 938)
+
+[node name="Objects" type="Node2D" parent="."]
+scale = Vector2(1.5, 1.5)
+
+[node name="Tree" parent="Objects" instance=ExtResource("5_jkpbc")]
+position = Vector2(331.33334, 664.6667)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Tree2" parent="Objects" instance=ExtResource("5_jkpbc")]
+position = Vector2(439.33334, 377.33334)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Tree3" parent="Objects" instance=ExtResource("5_jkpbc")]
+position = Vector2(238.66667, 50.666656)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Bush" parent="Objects" instance=ExtResource("4_063jp")]
+position = Vector2(379.33334, 749.3334)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Bush2" parent="Objects" instance=ExtResource("4_063jp")]
+position = Vector2(-58, 161.33333)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Bush3" parent="Objects" instance=ExtResource("4_063jp")]
+position = Vector2(505.33337, 103.99999)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Rock" parent="Objects" instance=ExtResource("5_hm8ck")]
+position = Vector2(366, 469.33334)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Rock3" parent="Objects" instance=ExtResource("5_hm8ck")]
+position = Vector2(554, 110)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Rock2" parent="Objects" instance=ExtResource("5_hm8ck")]
+position = Vector2(589.3334, 722.6667)
+scale = Vector2(0.6666667, 0.6666667)
+
+[node name="Edges" parent="." instance=ExtResource("5_5565n")]

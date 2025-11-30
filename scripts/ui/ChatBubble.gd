@@ -1,4 +1,4 @@
-# ChatBubble.gd - Stack of chat bubbles for one player
+# Bubbles
 extends VBoxContainer
 
 const MAX_BUBBLES = 3
@@ -21,8 +21,7 @@ func set_username(new_username: String) -> void:
 
 
 func add_message(text: String) -> void:
-	var panel := PanelContainer.new()
-	
+	var panel := PanelContainer.new()	
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(1, 1, 1, 1)
 	style.border_width_left = 2
@@ -50,12 +49,13 @@ func add_message(text: String) -> void:
 	messages_container.add_child(panel)
 	
 	var lifetime := calculate_lifetime(text)
+	var current_time := Time.get_ticks_msec() / 1000.0
 	
 	var message_data := {
 		"panel": panel,
 		"style": style,
-		"lifetime": 0.0,
-		"max_lifetime": lifetime
+		"expire_time": current_time + lifetime,
+		"fade_start_time": current_time + lifetime - 0.5
 	}
 	
 	messages.append(message_data)
@@ -111,7 +111,8 @@ func update_last_message_style() -> void:
 			style.corner_radius_bottom_right = 0
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
+	var current_time := Time.get_ticks_msec() / 1000.0
 	var i := 0
 	var needs_style_update := false
 	
@@ -122,13 +123,13 @@ func _process(delta: float) -> void:
 			messages.remove_at(i)
 			needs_style_update = true
 			continue
-		
-		msg.lifetime += delta
-		
-		if msg.lifetime >= msg.max_lifetime - 0.5:
-			msg.panel.modulate.a = (msg.max_lifetime - msg.lifetime) / 0.5
-		
-		if msg.lifetime >= msg.max_lifetime:
+
+		if current_time >= msg.fade_start_time and current_time < msg.expire_time:
+			var fade_duration := 0.5
+			var time_remaining: float = msg.expire_time - current_time
+			msg.panel.modulate.a = time_remaining / fade_duration
+
+		if current_time >= msg.expire_time:
 			msg.panel.queue_free()
 			messages.remove_at(i)
 			needs_style_update = true

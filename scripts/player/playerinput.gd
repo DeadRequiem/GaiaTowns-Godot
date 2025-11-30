@@ -8,7 +8,6 @@ var key_left: bool = false
 var key_right: bool = false
 var key_up: bool = false
 var key_down: bool = false
-
 var mouse_target: Vector2 = Vector2.ZERO
 var has_mouse_target: bool = false
 
@@ -20,7 +19,6 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		mouse_target = get_viewport().get_mouse_position()
-		# Convert viewport coordinates to global position
 		var camera := get_viewport().get_camera_2d()
 		if camera:
 			mouse_target = camera.get_screen_center_position() + (mouse_target - get_viewport().get_visible_rect().size / 2)
@@ -62,10 +60,8 @@ func get_movement_direction() -> Vector2:
 func get_mouse_target() -> Vector2:
 	return mouse_target
 
-
 func has_active_mouse_target() -> bool:
 	return has_mouse_target
-
 
 func clear_mouse_target() -> void:
 	has_mouse_target = false

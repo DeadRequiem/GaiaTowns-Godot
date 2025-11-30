@@ -1,4 +1,4 @@
-# Client-side Map Navigation and Transition Manager
+# Client-side Map Navigation
 extends Node
 
 signal map_loaded(map_id: int)
@@ -8,18 +8,15 @@ signal transition_completed(map_id: int)
 @export var map_width: float = 1536.0
 @export var map_height: float = 1536.0
 
-const MAP_SCALE: float = 1.5
+const MAP_SCALE: float = 1.0
 const EDGE_CLEARANCE: float = 60.0
-
 var current_barton_id: int = 1000
 var current_map_id: int = 5
 var barton_grid: Array = []
 var current_row: int = 1
 var current_col: int = 1
-
 var current_map: Node2D = null
 var transitioning: bool = false
-
 var edge_north: Area2D = null
 var edge_south: Area2D = null
 var edge_east: Area2D = null

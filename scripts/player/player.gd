@@ -1,4 +1,4 @@
-# Player - Core movement and physics
+# Player
 extends CharacterBody2D
 
 const ARRIVAL_THRESHOLD: float = 5.0
@@ -27,12 +27,9 @@ func set_username(new_username: String) -> void:
 	if username_label:
 		username_label.set_username(username)
 		await get_tree().process_frame
-		
-		# Avatar visual center is at x=10 (shifts between 0 and 20)
+
 		var avatar_center_x = 10.0
 		var label_width = username_label.get_minimum_size().x
-		
-		# Center label at x=10 to match avatar
 		username_label.offset_left = avatar_center_x - (label_width / 2.0)
 		username_label.offset_right = avatar_center_x + (label_width / 2.0)
 
@@ -82,6 +79,7 @@ func _process(delta: float) -> void:
 	player_avatar.update_animation(delta, is_walking, is_kneeling, in_water)
 	
 	update_sprite_offset()
+	global_position = global_position.round()
 
 
 func update_sprite_offset() -> void:
@@ -91,8 +89,7 @@ func update_sprite_offset() -> void:
 
 func calculate_velocity(_delta: float) -> Vector2:
 	var speed := BASE_SPEED
-	var vel := Vector2.ZERO
-	
+	var vel := Vector2.ZERO	
 	var keyboard_direction: Vector2 = player_input.get_movement_direction()
 	if keyboard_direction != Vector2.ZERO:
 		vel = keyboard_direction * speed
@@ -119,13 +116,11 @@ func get_state() -> Dictionary:
 		"is_kneeling": is_kneeling
 	}
 
-
 func get_facing() -> Dictionary:
 	return {
 		"direction": player_avatar.get_direction(),
 		"facing_lr": player_avatar.get_facing_lr()
 	}
-
 
 func get_feet_position() -> Vector2:
 	return global_position + Vector2(0, 60)

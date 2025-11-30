@@ -1,4 +1,4 @@
-# Player Avatar - Handles sprite loading and animation
+# Player Avatar
 extends Node
 
 signal avatar_loaded()
@@ -22,14 +22,11 @@ var avatar_url: String = ""
 var strip_texture: Texture2D
 var frames: Array[Texture2D] = []
 var leg_frames: Array[Texture2D] = []
-
 var face: String = "front"
 var facing_lr: String = "right"
-
 var leg_index: int = 0
 var leg_timer: float = 0.0
 var leg_frame_time: float = 0.12
-
 
 func _ready() -> void:
 	if http_request:
@@ -42,7 +39,7 @@ func load_avatar(url: String) -> void:
 	var strip_url := to_strip_url(url)
 	avatar_url = strip_url
 	
-	# Add cache-busting parameter
+	# cache-busting parameter
 	var final_url := strip_url
 	if not "?t=" in final_url and not "?" in final_url:
 		final_url = strip_url + "?t=" + str(Time.get_unix_time_from_system())
@@ -71,8 +68,6 @@ func to_strip_url(url: String) -> String:
 		base_url = base_url.replace("_flip.png", "_strip.png")
 	elif base_url.ends_with(".png") and not base_url.ends_with("_strip.png"):
 		base_url = base_url.replace(".png", "_strip.png")
-	
-	# Reconstruct with query params if they existed
 	if not query_params.is_empty():
 		return base_url + "?" + query_params
 	return base_url
@@ -101,7 +96,7 @@ func _on_http_request_completed(
 	strip_texture = ImageTexture.create_from_image(img)
 	slice_strip()
 	avatar_loaded.emit()
-	print("Avatar loaded successfully!")
+	print("Avatar loaded successfully")
 
 
 func slice_strip() -> void:
@@ -179,7 +174,7 @@ func get_torso_frame(is_walking: bool, is_kneeling: bool) -> int:
 
 
 func get_direction() -> String:
-	# This could be expanded to return 8-directional values
+	# This could be expanded to return 8-directional values. Maybe. 
 	if face == "back":
 		return "N"
 	else:

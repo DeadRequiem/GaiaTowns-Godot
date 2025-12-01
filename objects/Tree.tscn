@@ -95,3 +95,6 @@ position = Vector2(209, 159)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea"]
 position = Vector2(32, 60)
 shape = SubResource("RectangleShape2D_rgm70")
+
+[node name="DepthMarker" type="Marker2D" parent="."]
+position = Vector2(243, 262)

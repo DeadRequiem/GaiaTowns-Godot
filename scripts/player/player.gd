@@ -17,6 +17,19 @@ var in_water: bool = false
 var face: String = "front"
 var facing_lr: String = "right"
 
+var is_spinning: bool = false
+var spin_timer: float = 0.0
+var spin_duration: float = 7.0
+var spin_interval: float = 0.05
+var spin_step_timer: float = 0.0
+var spin_direction_index: int = 0
+var spin_directions: Array = [
+	Vector2(-1, 0),
+	Vector2(0, -1),
+	Vector2(1, 0),
+	Vector2(0, 1)
+]
+
 
 func _ready() -> void:
 	pass
@@ -56,7 +69,41 @@ func reload_avatar() -> void:
 		push_warning("No avatar loaded to reload")
 
 
+func start_spin() -> void:
+	if is_spinning:
+		return
+	is_spinning = true
+	spin_timer = 0.0
+	spin_step_timer = 0.0
+	spin_direction_index = 0
+
+func toggle_invert() -> void:
+	player_avatar.toggle_invert()
+
 func _process(delta: float) -> void:
+	if is_spinning:
+		spin_timer += delta
+		spin_step_timer += delta
+		
+		if spin_step_timer >= spin_interval:
+			spin_step_timer -= spin_interval
+			spin_direction_index = (spin_direction_index + 1) % spin_directions.size()
+			var spin_dir = spin_directions[spin_direction_index]
+			player_avatar.update_facing(spin_dir)
+		
+		if spin_timer >= spin_duration:
+			is_spinning = false
+			spin_timer = 0.0
+			spin_step_timer = 0.0
+		
+		face = player_avatar.face
+		facing_lr = player_avatar.facing_lr
+		player_avatar.update_animation(delta, false, is_kneeling, in_water)
+		z_index = int(get_feet_position().y)
+		update_sprite_offset()
+		global_position = global_position.round()
+		return
+	
 	var vel := calculate_velocity(delta)
 	
 	if vel != Vector2.ZERO:
@@ -77,6 +124,7 @@ func _process(delta: float) -> void:
 	face = player_avatar.face
 	facing_lr = player_avatar.facing_lr
 	player_avatar.update_animation(delta, is_walking, is_kneeling, in_water)
+	z_index = int(get_feet_position().y)
 	
 	update_sprite_offset()
 	global_position = global_position.round()

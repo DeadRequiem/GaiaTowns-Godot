@@ -1,5 +1,6 @@
-[gd_scene load_steps=8 format=3 uid="uid://bgfg1uxu4bofg"]
+[gd_scene load_steps=9 format=3 uid="uid://bgfg1uxu4bofg"]
 
+[ext_resource type="Script" uid="uid://d3dpb7a6ujlsr" path="res://scripts/misc/staticobject.gd" id="1_di5e4"]
 [ext_resource type="Texture2D" uid="uid://dyohab6y68euq" path="res://assets/objects/walls/WallSmall.png" id="1_jpixs"]
 
 [sub_resource type="SegmentShape2D" id="SegmentShape2D_jpixs"]
@@ -28,6 +29,7 @@ b = Vector2(1.3333334, 19.333334)
 
 [node name="WallSmall" type="Node2D"]
 scale = Vector2(1.5, 1.5)
+script = ExtResource("1_di5e4")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("1_jpixs")
@@ -52,3 +54,6 @@ shape = SubResource("SegmentShape2D_tv54t")
 
 [node name="CollisionShape2D6" type="CollisionShape2D" parent="StaticBody2D"]
 shape = SubResource("SegmentShape2D_nvq5k")
+
+[node name="DepthMarker" type="Marker2D" parent="."]
+position = Vector2(34.666668, 39.333336)

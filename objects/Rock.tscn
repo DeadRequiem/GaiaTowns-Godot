@@ -1,9 +1,14 @@
-[gd_scene load_steps=2 format=3 uid="uid://csxbf1dyk5f4j"]
+[gd_scene load_steps=3 format=3 uid="uid://csxbf1dyk5f4j"]
 
+[ext_resource type="Script" uid="uid://d3dpb7a6ujlsr" path="res://scripts/misc/staticobject.gd" id="1_ribq2"]
 [ext_resource type="Texture2D" uid="uid://b5sccnux4m0fs" path="res://assets/objects/rock/Rock.png" id="1_vrfid"]
 
 [node name="Rock" type="Node2D"]
+script = ExtResource("1_ribq2")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("1_vrfid")
 centered = false
+
+[node name="DepthMarker" type="Marker2D" parent="."]
+position = Vector2(72, 35)

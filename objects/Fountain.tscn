@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://vl4xsnwqkwq8"]
+[gd_scene load_steps=7 format=3 uid="uid://vl4xsnwqkwq8"]
 
 [ext_resource type="Texture2D" uid="uid://dt6hw4e836h2b" path="res://assets/objects/fountain/FWater_1.png" id="1_5exql"]
+[ext_resource type="Script" uid="uid://d3dpb7a6ujlsr" path="res://scripts/misc/staticobject.gd" id="1_sfg38"]
 [ext_resource type="Texture2D" uid="uid://bx54bfg0pbgbs" path="res://assets/objects/fountain/FWater_2.png" id="2_sfg38"]
 [ext_resource type="Texture2D" uid="uid://dfc3g8c21kean" path="res://assets/objects/fountain/FWater_3.png" id="3_okrsb"]
 [ext_resource type="Texture2D" uid="uid://bkn1fo35n77lw" path="res://assets/objects/fountain/FountainBase.png" id="4_i5611"]
@@ -23,6 +24,7 @@ animations = [{
 }]
 
 [node name="Fountain" type="Node2D"]
+script = ExtResource("1_sfg38")
 
 [node name="Base" type="Sprite2D" parent="."]
 texture = ExtResource("4_i5611")
@@ -36,3 +38,6 @@ animation = &"Idle"
 autoplay = "Idle"
 frame_progress = 0.20592645
 centered = false
+
+[node name="DepthMarker" type="Marker2D" parent="."]
+position = Vector2(286, 207)

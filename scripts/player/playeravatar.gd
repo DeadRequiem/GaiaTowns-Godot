@@ -27,19 +27,43 @@ var facing_lr: String = "right"
 var leg_index: int = 0
 var leg_timer: float = 0.0
 var leg_frame_time: float = 0.12
+var is_loading: bool = false
+var pending_url: String = ""
+var is_inverted: bool = false
+
 
 func _ready() -> void:
 	if http_request:
 		if not http_request.request_completed.is_connected(_on_http_request_completed):
 			http_request.request_completed.connect(_on_http_request_completed)
 
+	var shader = load("res://shaders/avatar_effects.gdshader")
+	
+	var torso_mat = ShaderMaterial.new()
+	torso_mat.shader = shader
+	torso_sprite.material = torso_mat	
+	var legs_mat = ShaderMaterial.new()
+	legs_mat.shader = shader
+	legs_sprite.material = legs_mat
+	
+func toggle_invert() -> void:
+	is_inverted = not is_inverted
+	if torso_sprite.material:
+		torso_sprite.material.set_shader_parameter("invert", is_inverted)
+	if legs_sprite.material:
+		legs_sprite.material.set_shader_parameter("invert", is_inverted)
 
 func load_avatar(url: String) -> void:
 	# Normalize to strip format
 	var strip_url := to_strip_url(url)
-	avatar_url = strip_url
+	if is_loading:
+		pending_url = strip_url
+		return
 	
-	# cache-busting parameter
+	avatar_url = strip_url
+	is_loading = true
+	
+	# Add cache-busting parameter
 	var final_url := strip_url
 	if not "?t=" in final_url and not "?" in final_url:
 		final_url = strip_url + "?t=" + str(Time.get_unix_time_from_system())
@@ -68,6 +92,7 @@ func to_strip_url(url: String) -> String:
 		base_url = base_url.replace("_flip.png", "_strip.png")
 	elif base_url.ends_with(".png") and not base_url.ends_with("_strip.png"):
 		base_url = base_url.replace(".png", "_strip.png")
+	
 	if not query_params.is_empty():
 		return base_url + "?" + query_params
 	return base_url
@@ -79,24 +104,40 @@ func _on_http_request_completed(
 	_headers: PackedStringArray,
 	body: PackedByteArray
 ) -> void:
+	is_loading = false
+	
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 		push_error("Failed to download avatar: result=%d, code=%d" % [result, response_code])
+		check_pending_load()
 		return
 	
 	if body.size() == 0:
 		push_error("Received empty body from avatar request")
+		check_pending_load()
 		return
 	
 	var img := Image.new()
 	var load_result := img.load_png_from_buffer(body)
 	if load_result != OK:
 		push_error("Failed to load PNG from buffer: error %d" % load_result)
+		check_pending_load()
 		return
 	
 	strip_texture = ImageTexture.create_from_image(img)
 	slice_strip()
 	avatar_loaded.emit()
 	print("Avatar loaded successfully")
+	
+	# Process pending load if any
+	check_pending_load()
+
+
+func check_pending_load() -> void:
+	"""Check if there's a pending avatar load request"""
+	if not pending_url.is_empty():
+		var url_to_load := pending_url
+		pending_url = ""
+		load_avatar(url_to_load)
 
 
 func slice_strip() -> void:
@@ -141,10 +182,12 @@ func update_animation(delta: float, is_walking: bool, is_kneeling: bool, in_wate
 	if frames.size() > 0:
 		var frame_idx := get_torso_frame(is_walking, is_kneeling)
 		torso_sprite.texture = frames[frame_idx]
-
+	
+	# Flip sprites based on facing direction
 	var flip := (facing_lr == "right")
 	torso_sprite.flip_h = flip
 	legs_sprite.flip_h = flip
+	
 	if facing_lr == "right":
 		torso_sprite.position.x = 20
 		legs_sprite.position.x = 20
@@ -154,15 +197,20 @@ func update_animation(delta: float, is_walking: bool, is_kneeling: bool, in_wate
 
 
 func update_facing(velocity: Vector2) -> void:
-	if velocity.y < 0:
-		face = "back"
-	elif velocity.y > 0:
-		face = "front"
-	
-	if velocity.x < 0:
-		facing_lr = "left"
-	elif velocity.x > 0:
-		facing_lr = "right"
+	# Prioritize the stronger direction component
+	# This prevents diagonal facing - only update one axis at a time
+	if abs(velocity.x) > abs(velocity.y):
+		# Horizontal movement is stronger - only update left/right
+		if velocity.x < 0:
+			facing_lr = "left"
+		elif velocity.x > 0:
+			facing_lr = "right"
+	else:
+		# Vertical movement is stronger - only update front/back
+		if velocity.y < 0:
+			face = "back"
+		elif velocity.y > 0:
+			face = "front"
 
 
 func get_torso_frame(is_walking: bool, is_kneeling: bool) -> int:
@@ -174,7 +222,7 @@ func get_torso_frame(is_walking: bool, is_kneeling: bool) -> int:
 
 
 func get_direction() -> String:
-	# This could be expanded to return 8-directional values. Maybe. 
+	# This could be expanded to return 8-directional values
 	if face == "back":
 		return "N"
 	else:
@@ -183,7 +231,8 @@ func get_direction() -> String:
 
 func get_facing_lr() -> String:
 	return facing_lr
-	
+
+
 func set_visual_offset(offset_y: float) -> void:
 	torso_sprite.position.y = offset_y
 	legs_sprite.position.y = offset_y

@@ -12,14 +12,12 @@ var peer_id: int = -1
 var username: String = ""
 var avatar_url: String = ""
 
-# Network state
 var target_position: Vector2 = Vector2.ZERO
 var is_walking: bool = false
 var is_kneeling: bool = false
 var in_water: bool = false
 var face: String = "front"
 var facing_lr: String = "right"
-
 
 func initialize(id: int, player_username: String, player_avatar_url: String, pos: Vector2) -> void:
 	peer_id = id
@@ -47,14 +45,12 @@ func load_avatar(url: String) -> void:
 		return
 	if player_avatar:
 		player_avatar.load_avatar(url)
-	else:
-		push_error("PlayerAvatar node not found for remote player %d" % peer_id)
 
 func update_from_network(pos: Vector2, state: Dictionary, facing: Dictionary) -> void:
 	target_position = pos	
 	is_walking = state.get("is_moving", false)
 	is_kneeling = state.get("is_kneeling", false)
-	in_water = state.get("in_water", false)	
+	in_water = state.get("in_water", false)
 	face = facing.get("direction", "front")
 	facing_lr = facing.get("facing_lr", "right")
 
@@ -69,13 +65,13 @@ func _process(delta: float) -> void:
 	else:
 		global_position = target_position
 	
-	# Sync avatar state
 	if player_avatar:
 		player_avatar.face = face
 		player_avatar.facing_lr = facing_lr
-		player_avatar.update_animation(delta, is_walking, is_kneeling, in_water)	
+		player_avatar.update_animation(delta, is_walking, is_kneeling, in_water)
+	
+	z_index = int(get_feet_position().y)
 	update_sprite_offset()
-
 
 func update_sprite_offset() -> void:
 	var offset_y := KNEEL_Y_OFFSET if is_kneeling else 0.0

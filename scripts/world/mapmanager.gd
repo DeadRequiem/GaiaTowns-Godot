@@ -17,6 +17,7 @@ var current_row: int = 1
 var current_col: int = 1
 var current_map: Node2D = null
 var transitioning: bool = false
+var transition_lock: bool = false
 var edge_north: Area2D = null
 var edge_south: Area2D = null
 var edge_east: Area2D = null
@@ -134,7 +135,7 @@ func disconnect_edge_areas() -> void:
 
 
 func _on_edge_entered(body: Node2D, direction: String) -> void:
-	if barton_grid.is_empty() or transitioning:
+	if barton_grid.is_empty() or transitioning or transition_lock:
 		return
 	
 	# Check if it's the player and has sufficient velocity
@@ -177,11 +178,14 @@ func _on_edge_entered(body: Node2D, direction: String) -> void:
 		print("Cannot transition %s - no map at [%d, %d]" % [direction, new_row, new_col])
 		return
 	
+	# Set lock immediately to prevent double-transitions
+	transition_lock = true
 	call_deferred("transition_to_map", body, new_row, new_col, came_from)
 
 
 func transition_to_map(player_body: Node2D, new_row: int, new_col: int, came_from: String) -> void:
 	if transitioning:
+		transition_lock = false
 		return
 	
 	transitioning = true
@@ -209,6 +213,7 @@ func transition_to_map(player_body: Node2D, new_row: int, new_col: int, came_fro
 	
 	await get_tree().create_timer(0.2).timeout
 	transitioning = false
+	transition_lock = false
 	print("Transition complete")
 
 

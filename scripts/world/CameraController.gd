@@ -10,8 +10,6 @@ func _ready() -> void:
 	position_smoothing_enabled = true
 	position_smoothing_speed = 10.0
 	set_process_mode(Node.PROCESS_MODE_INHERIT)
-	
-	# Hardcoded zoom that looks correct
 	zoom = Vector2(1.4, 1.4)
 
 func set_target(new_target: Node2D) -> void:
@@ -27,8 +25,5 @@ func set_map_bounds(width: float, height: float) -> void:
 
 func _process(_delta: float) -> void:
 	if not target:
-		return	
-	update_position()
-
-func update_position() -> void:
-	global_position = target.global_position.round()
+		return
+	global_position = target.global_position

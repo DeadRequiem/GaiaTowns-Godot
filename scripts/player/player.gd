@@ -17,98 +17,32 @@ var in_water: bool = false
 var face: String = "front"
 var facing_lr: String = "right"
 
-var is_spinning: bool = false
-var spin_timer: float = 0.0
-var spin_duration: float = 7.0
-var spin_interval: float = 0.05
-var spin_step_timer: float = 0.0
-var spin_direction_index: int = 0
-var spin_directions: Array = [
-	Vector2(-1, 0),
-	Vector2(0, -1),
-	Vector2(1, 0),
-	Vector2(0, 1)
-]
-
-
-func _ready() -> void:
-	pass
-
-
 func set_username(new_username: String) -> void:
 	username = new_username
 	if username_label:
 		username_label.set_username(username)
 		await get_tree().process_frame
-
 		var avatar_center_x = 10.0
 		var label_width = username_label.get_minimum_size().x
 		username_label.offset_left = avatar_center_x - (label_width / 2.0)
 		username_label.offset_right = avatar_center_x + (label_width / 2.0)
 
-
 func set_avatar_url(url: String) -> void:
 	avatar_url = url
-
 
 func set_kneeling(kneeling: bool) -> void:
 	is_kneeling = kneeling
 	if is_kneeling:
 		is_walking = false
 
-
 func load_avatar(url: String) -> void:
 	avatar_url = url
 	player_avatar.load_avatar(url)
 
-
-func reload_avatar() -> void:
-	if not avatar_url.is_empty():
-		player_avatar.load_avatar(avatar_url)
-	else:
-		push_warning("No avatar loaded to reload")
-
-
-func start_spin() -> void:
-	if is_spinning:
-		return
-	is_spinning = true
-	spin_timer = 0.0
-	spin_step_timer = 0.0
-	spin_direction_index = 0
-
-func toggle_invert() -> void:
-	player_avatar.toggle_invert()
-
 func _process(delta: float) -> void:
-	if is_spinning:
-		spin_timer += delta
-		spin_step_timer += delta
-		
-		if spin_step_timer >= spin_interval:
-			spin_step_timer -= spin_interval
-			spin_direction_index = (spin_direction_index + 1) % spin_directions.size()
-			var spin_dir = spin_directions[spin_direction_index]
-			player_avatar.update_facing(spin_dir)
-		
-		if spin_timer >= spin_duration:
-			is_spinning = false
-			spin_timer = 0.0
-			spin_step_timer = 0.0
-		
-		face = player_avatar.face
-		facing_lr = player_avatar.facing_lr
-		player_avatar.update_animation(delta, false, is_kneeling, in_water)
-		z_index = int(get_feet_position().y)
-		update_sprite_offset()
-		global_position = global_position.round()
-		return
-	
 	var vel := calculate_velocity(delta)
-	
 	if vel != Vector2.ZERO:
 		player_avatar.update_facing(vel)
-		
 		if not is_kneeling:
 			is_walking = true
 			velocity = vel
@@ -118,22 +52,18 @@ func _process(delta: float) -> void:
 	else:
 		is_walking = false
 		velocity = Vector2.ZERO
-	
 	move_and_slide()
 	
 	face = player_avatar.face
 	facing_lr = player_avatar.facing_lr
 	player_avatar.update_animation(delta, is_walking, is_kneeling, in_water)
 	z_index = int(get_feet_position().y)
-	
 	update_sprite_offset()
 	global_position = global_position.round()
-
 
 func update_sprite_offset() -> void:
 	var offset_y := KNEEL_Y_OFFSET if is_kneeling else 0.0
 	player_avatar.set_visual_offset(offset_y)
-
 
 func calculate_velocity(_delta: float) -> Vector2:
 	var speed := BASE_SPEED
@@ -156,7 +86,6 @@ func calculate_velocity(_delta: float) -> Vector2:
 	
 	return vel
 
-
 func get_state() -> Dictionary:
 	return {
 		"is_moving": is_walking,
@@ -166,8 +95,8 @@ func get_state() -> Dictionary:
 
 func get_facing() -> Dictionary:
 	return {
-		"direction": player_avatar.get_direction(),
-		"facing_lr": player_avatar.get_facing_lr()
+		"direction": face,
+		"facing_lr": facing_lr
 	}
 
 func get_feet_position() -> Vector2:

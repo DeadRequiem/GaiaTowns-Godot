@@ -20,7 +20,7 @@ func get_bubble_from_pool() -> Node:
 	return bubble
 
 
-func return_bubble_to_pool(bubble: Node) -> void:
+func return_bubble_to_pool(bubble: Node) -> void :
 	if not is_instance_valid(bubble):
 		return
 
@@ -36,15 +36,15 @@ func return_bubble_to_pool(bubble: Node) -> void:
 		bubble.queue_free()
 
 
-func show_chat_bubble(player_id: int, username: String, message: String, world_pos: Vector2) -> void:
+func show_chat_bubble(player_id: int, username: String, message: String, world_pos: Vector2) -> void :
 	if not player_stacks.has(player_id):
 		var stack = get_bubble_from_pool()
 		stack.name = "Stack_%d" % player_id
 		stack.set_username(username)
 
 		player_stacks[player_id] = {
-			"stack": stack,
-			"world_pos": world_pos,
+			"stack": stack, 
+			"world_pos": world_pos, 
 			"last_message_time": Time.get_ticks_msec() / 1000.0
 		}
 
@@ -60,10 +60,13 @@ func show_chat_bubble(player_id: int, username: String, message: String, world_p
 	stack_data.last_message_time = Time.get_ticks_msec() / 1000.0
 	stack_data.stack.add_message(message)
 
+
+	await get_tree().process_frame
+	await get_tree().process_frame
 	update_stack_position(player_id)
 
 
-func update_stack_position(player_id: int) -> void:
+func update_stack_position(player_id: int) -> void :
 	if not player_stacks.has(player_id):
 		return
 
@@ -72,27 +75,45 @@ func update_stack_position(player_id: int) -> void:
 		return
 
 	var stack = stack_data.stack
-	var camera := get_viewport().get_camera_2d()
+	var camera: = get_viewport().get_camera_2d()
 	if not camera:
 		return
 
 	var world_pos: Vector2 = stack_data.world_pos
-	var canvas_transform := get_viewport().get_canvas_transform()
-	var screen_pos := canvas_transform * world_pos
+
+
+	var viewport_size = get_viewport().get_visible_rect().size
+	var camera_center = camera.get_screen_center_position()
+
+	var world_offset = world_pos - camera_center
+	var screen_offset = world_offset * camera.zoom
+	var screen_pos = (viewport_size / 2.0) + screen_offset
+
+
+	stack.reset_size()
+	await get_tree().process_frame
+
+	var bubble_height = stack.size.y if stack.size.y > 0 else 50.0
+	var bubble_width = stack.size.x if stack.size.x > 0 else 150.0
+
+
 	screen_pos.y -= 80
-	screen_pos.y -= stack.size.y
-	screen_pos.x -= 67.5
-	screen_pos.x += 20
+	screen_pos.y -= bubble_height
+	screen_pos.x -= (bubble_width / 2.0)
+
+
+	screen_pos.x = clamp(screen_pos.x, 0, viewport_size.x - bubble_width)
+	screen_pos.y = clamp(screen_pos.y, 0, viewport_size.y - bubble_height)
 
 	stack.position = screen_pos
 
 
-func update_all_positions() -> void:
+func update_all_positions() -> void :
 	for player_id in player_stacks.keys():
 		update_stack_position(player_id)
 
 
-func update_player_position(player_id: int, world_pos: Vector2) -> void:
+func update_player_position(player_id: int, world_pos: Vector2) -> void :
 	if not player_stacks.has(player_id):
 		return
 
@@ -104,7 +125,7 @@ func update_player_position(player_id: int, world_pos: Vector2) -> void:
 	update_stack_position(player_id)
 
 
-func clear_player_bubbles(player_id: int) -> void:
+func clear_player_bubbles(player_id: int) -> void :
 	if not player_stacks.has(player_id):
 		return
 
@@ -116,7 +137,7 @@ func clear_player_bubbles(player_id: int) -> void:
 	player_stacks.erase(player_id)
 
 
-func clear_all_bubbles() -> void:
+func clear_all_bubbles() -> void :
 	for player_id in player_stacks.keys():
 		var stack_data = player_stacks[player_id]
 		if is_instance_valid(stack_data.stack):
@@ -125,11 +146,11 @@ func clear_all_bubbles() -> void:
 	player_stacks.clear()
 
 
-func _process(_delta: float) -> void:
+func _process(_delta: float) -> void :
 	update_all_positions()
 
-	var current_time := Time.get_ticks_msec() / 1000.0
-	var to_remove := []
+	var current_time: = Time.get_ticks_msec() / 1000.0
+	var to_remove: = []
 
 	for player_id in player_stacks.keys():
 		var stack_data = player_stacks[player_id]
@@ -147,7 +168,7 @@ func _process(_delta: float) -> void:
 		clear_player_bubbles(player_id)
 
 
-func _exit_tree() -> void:
+func _exit_tree() -> void :
 	for bubble in bubble_pool:
 		if is_instance_valid(bubble):
 			bubble.queue_free()

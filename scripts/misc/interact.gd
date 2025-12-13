@@ -9,7 +9,7 @@ func _ready():
 	interact_area.input_event.connect(_on_interact_area_input)
 
 func _process(_delta):
-	# Update z_index based on depth marker position for Y-sorting
+
 	z_index = int(depth_marker.global_position.y)
 
 func _on_interact_area_input(viewport, event, shape_idx):

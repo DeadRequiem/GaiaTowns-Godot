@@ -1,4 +1,4 @@
-# Server.gd - Client Side Autoload
+
 extends Node
 
 signal connection_success
@@ -47,14 +47,16 @@ func send_chat_message(message: String):
 func send_avatar_refresh(avatar_url: String):
 	_refresh_avatar.rpc_id(1, avatar_url)
 
-# Server -> Client rpc (incoming)
+
+
+
+
 @rpc("authority", "reliable")
 func _send_barton_data(barton_data: Dictionary, current_map_id: int):
 	barton_data_received.emit(barton_data, current_map_id)
 
-
 @rpc("authority", "reliable")
-func _player_joined(peer_id: int, username: String, avatar_url: String,
+func _player_joined(peer_id: int, username: String, avatar_url: String, 
 				   position: Vector2, state: Dictionary, facing: Dictionary):
 	remote_player_joined.emit(peer_id, username, avatar_url, position, state, facing)
 
@@ -83,7 +85,10 @@ func _confirm_admin_status(is_admin: bool):
 	UserSession.set_admin_status(is_admin)
 	admin_status_confirmed.emit(is_admin)
 
-# Client -> Server rpc (Outgoing)
+@rpc("authority", "reliable")
+func _send_player_list(player_list: Array):
+	pass
+
 @rpc("any_peer", "reliable")
 func _join_barton(username: String, avatar_url: String, barton_id: int, map_id: int, position: Vector2, admin_token: String):
 	pass
@@ -92,7 +97,7 @@ func _join_barton(username: String, avatar_url: String, barton_id: int, map_id: 
 func _change_map(map_id: int, position: Vector2):
 	pass
 
-@rpc("any_peer", "unreliable") 
+@rpc("any_peer", "unreliable")
 func _update_player(position: Vector2, state: Dictionary, facing: Dictionary):
 	pass
 
@@ -102,4 +107,8 @@ func _send_chat_message(message: String):
 
 @rpc("any_peer", "reliable")
 func _refresh_avatar(avatar_url: String):
+	pass
+
+@rpc("any_peer", "reliable")
+func _request_player_list():
 	pass

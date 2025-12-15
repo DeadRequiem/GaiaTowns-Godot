@@ -1,25 +1,25 @@
 [gd_scene load_steps=21 format=3 uid="uid://fxx0suqvxhcx"]
 
-[ext_resource type="Script" uid="uid://bqc0dqkaadgec" path="res://scripts/game.gd" id="1_80nbo"]
+[ext_resource type="Script" uid="uid://bqc0dqkaadgec" path="res://scripts/globals/game.gd" id="1_80nbo"]
 [ext_resource type="PackedScene" uid="uid://bakbl1cs5klsx" path="res://scenes/player.tscn" id="2_e2o6t"]
 [ext_resource type="Script" uid="uid://rhtpchxm11nb" path="res://scripts/world/CameraController.gd" id="3_fc0e3"]
 [ext_resource type="Script" uid="uid://goqml2xgw2fm" path="res://scripts/world/mapmanager.gd" id="3_feb5d"]
-[ext_resource type="Script" uid="uid://cmm1nfrsj33t3" path="res://scripts/ui/UIManager.gd" id="5_7jktm"]
-[ext_resource type="Texture2D" uid="uid://ws8cagu4ulg6" path="res://assets/ui/emote1.png" id="6_80cx4"]
-[ext_resource type="Texture2D" uid="uid://bgha16vififfa" path="res://assets/ui/report.png" id="6_iotsf"]
-[ext_resource type="Texture2D" uid="uid://b7y2k6uqguw7m" path="res://assets/ui/pose1.png" id="6_ryrav"]
-[ext_resource type="Texture2D" uid="uid://clkhnou5n6dha" path="res://assets/ui/emote2.png" id="7_e8heu"]
-[ext_resource type="Texture2D" uid="uid://bygvffp02g0cw" path="res://assets/ui/directory.png" id="7_lc2xo"]
-[ext_resource type="Texture2D" uid="uid://drgrk4vvica21" path="res://assets/ui/ignoreuser.png" id="8_215e1"]
-[ext_resource type="Texture2D" uid="uid://o8cdaxw7c8li" path="res://assets/ui/speechbubble.png" id="8_rvswv"]
-[ext_resource type="Texture2D" uid="uid://qs1vp8tu0oyw" path="res://assets/ui/book.png" id="9_boyg6"]
-[ext_resource type="Texture2D" uid="uid://bdgnerrompdb4" path="res://assets/ui/pose2.png" id="10_7sc4i"]
-[ext_resource type="Texture2D" uid="uid://cwjs84a2m4xbd" path="res://assets/ui/sound1.png" id="11_80cx4"]
-[ext_resource type="Texture2D" uid="uid://bs05ve1xtr2xp" path="res://assets/ui/sound2.png" id="12_e8heu"]
-[ext_resource type="Texture2D" uid="uid://dxs54lk1sq7yb" path="res://assets/ui/avatarRefresh.png" id="15_ssvqc"]
-[ext_resource type="Script" uid="uid://dh84snpvlogur" path="res://scripts/ui/ChatSystem.gd" id="17_85qyi"]
+[ext_resource type="Script" uid="uid://cmm1nfrsj33t3" path="res://scripts/ui/UIManager.gd" id="5_ssvqc"]
+[ext_resource type="Texture2D" uid="uid://ws8cagu4ulg6" path="res://assets/ui/emote1.png" id="6_264po"]
+[ext_resource type="Texture2D" uid="uid://clkhnou5n6dha" path="res://assets/ui/emote2.png" id="7_1kice"]
+[ext_resource type="Texture2D" uid="uid://o8cdaxw7c8li" path="res://assets/ui/speechbubble.png" id="8_5newe"]
+[ext_resource type="Texture2D" uid="uid://qs1vp8tu0oyw" path="res://assets/ui/book.png" id="9_37s47"]
+[ext_resource type="Texture2D" uid="uid://bgha16vififfa" path="res://assets/ui/report.png" id="10_bt5mj"]
+[ext_resource type="Texture2D" uid="uid://bygvffp02g0cw" path="res://assets/ui/directory.png" id="11_e1j6l"]
+[ext_resource type="Texture2D" uid="uid://drgrk4vvica21" path="res://assets/ui/ignoreuser.png" id="12_pl11u"]
+[ext_resource type="Texture2D" uid="uid://b7y2k6uqguw7m" path="res://assets/ui/pose1.png" id="13_bhx41"]
+[ext_resource type="Texture2D" uid="uid://bdgnerrompdb4" path="res://assets/ui/pose2.png" id="14_qnb83"]
+[ext_resource type="Texture2D" uid="uid://dxs54lk1sq7yb" path="res://assets/ui/avatarRefresh.png" id="15_sww3w"]
+[ext_resource type="Texture2D" uid="uid://cwjs84a2m4xbd" path="res://assets/ui/sound1.png" id="16_suyxu"]
+[ext_resource type="Texture2D" uid="uid://bs05ve1xtr2xp" path="res://assets/ui/sound2.png" id="17_sgl2t"]
+[ext_resource type="Script" uid="uid://dh84snpvlogur" path="res://scripts/ui/ChatSystem.gd" id="18_qouja"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_85qyi"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wljb1"]
 bg_color = Color(0.105882354, 0.105882354, 0.105882354, 0.8392157)
 border_width_left = 2
 border_width_top = 2
@@ -29,7 +29,7 @@ border_color = Color(0.4, 0.4, 0.4, 1)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ewbju"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v2yb1"]
 bg_color = Color(0, 0, 0, 0.68235296)
 corner_radius_top_left = 3
 corner_radius_top_right = 3
@@ -49,7 +49,7 @@ script = ExtResource("3_fc0e3")
 script = ExtResource("3_feb5d")
 
 [node name="UI" type="CanvasLayer" parent="."]
-script = ExtResource("5_7jktm")
+script = ExtResource("5_ssvqc")
 
 [node name="ChatBar" type="Control" parent="UI"]
 layout_mode = 3
@@ -86,16 +86,16 @@ theme_override_constants/separation = 8
 custom_minimum_size = Vector2(30, 34)
 layout_mode = 2
 toggle_mode = true
-texture_normal = ExtResource("6_80cx4")
-texture_pressed = ExtResource("7_e8heu")
+texture_normal = ExtResource("6_264po")
+texture_pressed = ExtResource("7_1kice")
 stretch_mode = 5
 
 [node name="ChatlogButton" type="TextureButton" parent="UI/ChatBar/LeftButtons"]
 custom_minimum_size = Vector2(30, 34)
 layout_mode = 2
 toggle_mode = true
-texture_normal = ExtResource("8_rvswv")
-texture_pressed = ExtResource("9_boyg6")
+texture_normal = ExtResource("8_5newe")
+texture_pressed = ExtResource("9_37s47")
 stretch_mode = 5
 
 [node name="ChatInput" type="TextEdit" parent="UI/ChatBar"]
@@ -128,40 +128,40 @@ theme_override_constants/separation = 5
 [node name="ReportButton" type="TextureButton" parent="UI/ChatBar/MiddleButtons"]
 custom_minimum_size = Vector2(70, 35)
 layout_mode = 2
-texture_normal = ExtResource("6_iotsf")
+texture_normal = ExtResource("10_bt5mj")
 stretch_mode = 5
 
 [node name="DirectoryButton" type="TextureButton" parent="UI/ChatBar/MiddleButtons"]
 custom_minimum_size = Vector2(70, 35)
 layout_mode = 2
-texture_normal = ExtResource("7_lc2xo")
+texture_normal = ExtResource("11_e1j6l")
 stretch_mode = 5
 
 [node name="IgnoreButton" type="TextureButton" parent="UI/ChatBar/MiddleButtons"]
 custom_minimum_size = Vector2(70, 35)
 layout_mode = 2
-texture_normal = ExtResource("8_215e1")
+texture_normal = ExtResource("12_pl11u")
 stretch_mode = 5
 
 [node name="TempButton" type="TextureButton" parent="UI/ChatBar/MiddleButtons"]
 visible = false
 custom_minimum_size = Vector2(70, 35)
 layout_mode = 2
-texture_normal = ExtResource("8_215e1")
+texture_normal = ExtResource("12_pl11u")
 stretch_mode = 5
 
 [node name="TempButton2" type="TextureButton" parent="UI/ChatBar/MiddleButtons"]
 visible = false
 custom_minimum_size = Vector2(70, 35)
 layout_mode = 2
-texture_normal = ExtResource("8_215e1")
+texture_normal = ExtResource("12_pl11u")
 stretch_mode = 5
 
 [node name="TempButton3" type="TextureButton" parent="UI/ChatBar/MiddleButtons"]
 visible = false
 custom_minimum_size = Vector2(70, 35)
 layout_mode = 2
-texture_normal = ExtResource("8_215e1")
+texture_normal = ExtResource("12_pl11u")
 stretch_mode = 5
 
 [node name="RightButtons" type="HBoxContainer" parent="UI/ChatBar"]
@@ -182,15 +182,15 @@ grow_vertical = 2
 custom_minimum_size = Vector2(70, 35)
 layout_mode = 2
 toggle_mode = true
-texture_normal = ExtResource("6_ryrav")
-texture_pressed = ExtResource("10_7sc4i")
+texture_normal = ExtResource("13_bhx41")
+texture_pressed = ExtResource("14_qnb83")
 stretch_mode = 5
 
 [node name="AvatarRefresh" type="TextureButton" parent="UI/ChatBar/RightButtons"]
 custom_minimum_size = Vector2(70, 35)
 layout_mode = 2
 toggle_mode = true
-texture_normal = ExtResource("15_ssvqc")
+texture_normal = ExtResource("15_sww3w")
 ignore_texture_size = true
 stretch_mode = 5
 
@@ -208,8 +208,8 @@ layout_mode = 0
 offset_right = 19.0
 offset_bottom = 16.0
 toggle_mode = true
-texture_normal = ExtResource("11_80cx4")
-texture_pressed = ExtResource("12_e8heu")
+texture_normal = ExtResource("16_suyxu")
+texture_pressed = ExtResource("17_sgl2t")
 stretch_mode = 3
 
 [node name="ChatLogWindow" type="Panel" parent="UI"]
@@ -223,7 +223,7 @@ offset_top = -800.0
 offset_right = 390.0
 offset_bottom = -35.0
 grow_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_85qyi")
+theme_override_styles/panel = SubResource("StyleBoxFlat_wljb1")
 
 [node name="MarginContainer" type="MarginContainer" parent="UI/ChatLogWindow"]
 layout_mode = 1
@@ -260,9 +260,9 @@ offset_bottom = 24.0
 grow_horizontal = 0
 theme_override_colors/font_color = Color(0.92984587, 0.9298463, 0, 1)
 theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxFlat_ewbju")
+theme_override_styles/normal = SubResource("StyleBoxFlat_v2yb1")
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ChatSystem" type="CanvasLayer" parent="."]
-script = ExtResource("17_85qyi")
+script = ExtResource("18_qouja")

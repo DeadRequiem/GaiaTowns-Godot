@@ -50,7 +50,7 @@ var pending_url: String = ""
 signal avatar_loaded()
 
 
-func _ready() -> void :
+func _ready() -> void:
 	set_process_unhandled_input(true)
 
 	if not torso_sprite:
@@ -81,7 +81,7 @@ func _ready() -> void :
 			apply_avatar_hue_shift(hue_shift)
 
 
-func setup_sprite_rendering() -> void :
+func setup_sprite_rendering() -> void:
 	"Configure sprites for sharp, high-quality rendering"
 	if torso_sprite:
 		torso_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
@@ -90,7 +90,7 @@ func setup_sprite_rendering() -> void :
 		legs_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 
 
-func _on_preference_changed(key: String, value: Variant) -> void :
+func _on_preference_changed(key: String, value: Variant) -> void:
 	"Handle preference changes in real-time"
 	match key:
 		"speed_multiplier":
@@ -99,14 +99,14 @@ func _on_preference_changed(key: String, value: Variant) -> void :
 			apply_avatar_hue_shift(value)
 
 
-func apply_avatar_hue_shift(hue: float) -> void :
+func apply_avatar_hue_shift(hue: float) -> void:
 	"Apply hue shift to avatar sprites"
 	if torso_sprite:
 		torso_sprite.modulate = Color.from_hsv(hue, 1.0, 1.0)
 	if legs_sprite:
 		legs_sprite.modulate = Color.from_hsv(hue, 1.0, 1.0)
 
-func _unhandled_input(event: InputEvent) -> void :
+func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		mouse_target = get_viewport().get_mouse_position()
 		var camera: = get_viewport().get_camera_2d()
@@ -115,7 +115,7 @@ func _unhandled_input(event: InputEvent) -> void :
 		has_mouse_target = true
 
 
-func update_keyboard_input() -> void :
+func update_keyboard_input() -> void:
 	key_left = Input.is_action_pressed("move_left")
 	key_right = Input.is_action_pressed("move_right")
 	key_up = Input.is_action_pressed("move_up")
@@ -130,32 +130,32 @@ func get_movement_direction() -> Vector2:
 	return direction
 
 
-func clear_mouse_target() -> void :
+func clear_mouse_target() -> void:
 	has_mouse_target = false
 	mouse_target = Vector2.ZERO
 
-func set_username(new_username: String) -> void :
+func set_username(new_username: String) -> void:
 	username = new_username
 	if username_label:
 		username_label.set_username(username)
 		await get_tree().process_frame
 
 		var label_width = username_label.size.x
-		username_label.position.x = - label_width / 2.0
+		username_label.position.x = -label_width / 2.0 + 10.0  # Add 10px offset for centered avatar
 		username_label.position.y = 76.0
 
 
-func set_avatar_url(url: String) -> void :
+func set_avatar_url(url: String) -> void:
 	avatar_url = url
 
 
-func set_kneeling(kneeling: bool) -> void :
+func set_kneeling(kneeling: bool) -> void:
 	is_kneeling = kneeling
 	if is_kneeling:
 		is_walking = false
 
 
-func _process(delta: float) -> void :
+func _process(delta: float) -> void:
 	update_keyboard_input()
 
 	var vel: = calculate_velocity(delta)
@@ -179,7 +179,7 @@ func _process(delta: float) -> void :
 	global_position = global_position.round()
 
 
-func update_sprite_offset() -> void :
+func update_sprite_offset() -> void:
 	var offset_y: = KNEEL_Y_OFFSET if is_kneeling else 0.0
 	set_visual_offset(offset_y)
 
@@ -209,15 +209,15 @@ func calculate_velocity(_delta: float) -> Vector2:
 
 func get_state() -> Dictionary:
 	return {
-		"is_moving": is_walking, 
-		"in_water": in_water, 
+		"is_moving": is_walking,
+		"in_water": in_water,
 		"is_kneeling": is_kneeling
 	}
 
 
 func get_facing() -> Dictionary:
 	return {
-		"direction": face, 
+		"direction": face,
 		"facing_lr": facing_lr
 	}
 
@@ -225,7 +225,7 @@ func get_facing() -> Dictionary:
 func get_feet_position() -> Vector2:
 	return global_position + Vector2(0, 60)
 
-func load_avatar(url: String) -> void :
+func load_avatar(url: String) -> void:
 	avatar_url = url
 	if not http_request:
 		push_error("Player: Cannot load avatar - HTTPRequest node missing")
@@ -250,8 +250,8 @@ func load_avatar(url: String) -> void :
 	is_loading = true
 
 	var headers: = PackedStringArray([
-		"Referer: https://www.gaiaonline.com/", 
-		"Cache-Control: no-cache, no-store, must-revalidate", 
+		"Referer: https://www.gaiaonline.com/",
+		"Cache-Control: no-cache, no-store, must-revalidate",
         "Pragma: no-cache"
 	])
 
@@ -259,18 +259,18 @@ func load_avatar(url: String) -> void :
 	http_request.request(url, headers)
 
 
-func apply_texture_quality_settings() -> void :
+func apply_texture_quality_settings() -> void:
 	"Apply quality settings to loaded texture"
 	if strip_texture and strip_texture is ImageTexture:
 		pass
 
 
 func _on_http_request_completed(
-	result: int, 
-	response_code: int, 
-	_headers: PackedStringArray, 
+	result: int,
+	response_code: int,
+	_headers: PackedStringArray,
 	body: PackedByteArray
-) -> void :
+) -> void:
 	is_loading = false
 
 	if result != OK or response_code != 200:
@@ -302,7 +302,7 @@ func _on_http_request_completed(
 	check_pending_load()
 
 
-func load_fallback_avatar() -> void :
+func load_fallback_avatar() -> void:
 	"Load the fallback avatar when remote loading fails"
 	if ResourceLoader.exists(FALLBACK_AVATAR):
 		strip_texture = load(FALLBACK_AVATAR)
@@ -314,7 +314,7 @@ func load_fallback_avatar() -> void :
 		push_error("Fallback avatar not found at: " + FALLBACK_AVATAR)
 
 
-func check_pending_load() -> void :
+func check_pending_load() -> void:
 	"Check if there's a pending avatar load request"
 	if not pending_url.is_empty():
 		var url_to_load: = pending_url
@@ -322,7 +322,7 @@ func check_pending_load() -> void :
 		load_avatar(url_to_load)
 
 
-func slice_strip() -> void :
+func slice_strip() -> void:
 	frames.clear()
 	leg_frames.clear()
 	if not strip_texture:
@@ -344,7 +344,7 @@ func slice_strip() -> void :
 	print("Frames created: %d, Leg frames: %d" % [frames.size(), leg_frames.size()])
 
 
-func update_animation(delta: float, is_walking_state: bool, is_kneeling_state: bool, in_water_state: bool) -> void :
+func update_animation(delta: float, is_walking_state: bool, is_kneeling_state: bool, in_water_state: bool) -> void:
 	if is_walking_state and leg_frames.size() > 0 and not in_water_state:
 		leg_timer += delta
 		if leg_timer >= leg_frame_time:
@@ -373,7 +373,7 @@ func update_animation(delta: float, is_walking_state: bool, is_kneeling_state: b
 		legs_sprite.position.x = 0
 
 
-func update_facing(velocity: Vector2) -> void :
+func update_facing(velocity: Vector2) -> void:
 	if abs(velocity.x) > abs(velocity.y):
 		if velocity.x < 0:
 			facing_lr = "left"
@@ -405,6 +405,6 @@ func get_facing_lr() -> String:
 	return facing_lr
 
 
-func set_visual_offset(offset_y: float) -> void :
+func set_visual_offset(offset_y: float) -> void:
 	torso_sprite.position.y = offset_y
 	legs_sprite.position.y = offset_y

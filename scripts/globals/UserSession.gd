@@ -9,6 +9,7 @@ const PRODUCTION_SERVER_URL: String = "https://deaddreamers.com"
 
 var username: String = ""
 var avatar_url: String = ""
+var keycode: String = ""
 var admin_token: String = ""
 var is_admin: bool = false
 
@@ -51,12 +52,14 @@ func load_credentials() -> void:
 	if OS.has_feature("web"):
 		var username_js = JavaScriptBridge.eval("window.gameUsername || ''")
 		var avatar_url_js = JavaScriptBridge.eval("window.gameAvatarUrl || ''")
+		var keycode_js = JavaScriptBridge.eval("window.gameKeycode || ''")
 		var admin_token_js = JavaScriptBridge.eval(
 			"document.cookie.split('; ').find(row => row.startsWith('admin_token='))?.split('=')[1] || ''"
 		)
 
 		username = str(username_js) if username_js != null else ""
 		avatar_url = str(avatar_url_js) if avatar_url_js != null else ""
+		keycode = str(keycode_js) if keycode_js != null else ""
 		admin_token = str(admin_token_js) if admin_token_js != null else ""
 
 		# Generate guest username if none provided
@@ -74,12 +77,17 @@ func load_credentials() -> void:
 		print("UserSession: Loaded credentials")
 		print("  Username: ", username)
 		print("  Avatar URL: ", avatar_url if not avatar_url.begins_with("res://") else "(fallback)")
+		print("  Keycode: ", "***" if not keycode.is_empty() else "(MISSING!)")
 		print("  Admin Token: ", "***" if not admin_token.is_empty() else "(none)")
+		
+		if keycode.is_empty():
+			push_warning("UserSession: No keycode loaded! User may not be able to join.")
 
 		credentials_loaded.emit(username, avatar_url)
 	else:
 		username = generate_guest_username()
 		avatar_url = get_random_fallback_avatar()
+		keycode = ""
 		admin_token = ""
 		credentials_loaded.emit(username, avatar_url)
 

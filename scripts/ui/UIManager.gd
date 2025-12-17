@@ -3,7 +3,7 @@ extends CanvasLayer
 signal chat_message_sent(message: String)
 signal username_clicked(username: String)
 
-@onready var sound_button: TextureButton = $TopRightButtons/SoundButton
+@onready var sound_button: TextureButton = $TopBar/HBoxContainer/SoundButton
 @onready var pose_button: TextureButton = $ChatBar/RightButtons/PoseButton
 @onready var avatar_refresh_button: TextureButton = $ChatBar/RightButtons/AvatarRefresh
 @onready var report_button: TextureButton = $ChatBar/MiddleButtons/ReportButton
@@ -18,9 +18,8 @@ signal username_clicked(username: String)
 @onready var chat_log_window: Panel = $ChatLogWindow
 @onready var chat_log_messages: RichTextLabel = $ChatLogWindow/MarginContainer/ScrollContainer/Messages
 @onready var chat_scroll: ScrollContainer = $ChatLogWindow/MarginContainer/ScrollContainer
-@onready var location_label: Label = $LocationLabel
+@onready var location_label: Label = $TopBar/HBoxContainer/LocationLabel
 
-var chat_system: CanvasLayer = null
 var button_manager: Node = null
 var chat_log_open: bool = false
 var current_username: String = "Player"
@@ -38,10 +37,8 @@ func _ready() -> void:
 		var prefs = get_node("/root/PlayerPreferences")
 		prefs.chat_color_changed.connect(_on_chat_color_changed)
 
-
 func _on_chat_color_changed(username: String, color: Color) -> void:
 	pass
-
 
 func setup_button_manager() -> void:
 	button_manager = preload("res://scripts/misc/ButtonManager.gd").new()
@@ -74,9 +71,8 @@ func setup_chat_input() -> void:
 	chat_input.gui_input.connect(_on_chat_input_gui_input)
 	chat_input.focus_mode = Control.FOCUS_ALL
 	chat_input.text_changed.connect(_on_chat_text_changed)
-	
-	# Apply font to chat input for proper emoji display while typing
-	if FontManager.fonts_loaded:
+
+	if FontManager and FontManager.fonts_loaded:
 		chat_input.add_theme_font_override("font", FontManager.get_chat_font())
 
 
@@ -89,9 +85,8 @@ func setup_chat_log() -> void:
 		chat_log_messages.meta_clicked.connect(_on_chat_username_clicked)
 		chat_log_messages.selection_enabled = true
 		chat_log_messages.context_menu_enabled = true
-		
-		# Apply font for emoji/Unicode support in chat log
-		if FontManager.fonts_loaded:
+
+		if FontManager and FontManager.fonts_loaded:
 			chat_log_messages.add_theme_font_override("normal_font", FontManager.get_chat_font())
 			chat_log_messages.add_theme_font_override("bold_font", FontManager.get_chat_font())
 	
@@ -103,7 +98,6 @@ func _on_chat_username_clicked(meta: Variant) -> void:
 	if typeof(meta) == TYPE_STRING:
 		username_clicked.emit(str(meta))
 
-
 func _on_chat_input_gui_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
@@ -111,40 +105,67 @@ func _on_chat_input_gui_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif event.keycode in [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN]:
 			get_viewport().set_input_as_handled()
+		elif (event.ctrl_pressed or event.command_pressed) and event.keycode == KEY_V:
+			# Handle paste manually with multiple attempts
+			_handle_paste_with_retry()
+			get_viewport().set_input_as_handled()
+
+func _handle_paste_with_retry() -> void:
+
+	var clipboard_text = DisplayServer.clipboard_get()
+
+	if clipboard_text.is_empty():
+		await get_tree().process_frame
+		clipboard_text = DisplayServer.clipboard_get()
+
+	if clipboard_text.is_empty():
+		return
+
+	var current_text = chat_input.text
+	var caret_col = chat_input.get_caret_column()
+	var insert_pos = caret_col
+	var new_text = current_text.substr(0, insert_pos) + clipboard_text + current_text.substr(insert_pos)
+
+	if new_text.length() > MAX_MESSAGE_LENGTH:
+		new_text = new_text.substr(0, MAX_MESSAGE_LENGTH)
+
+	chat_input.text = new_text
+
+	var new_caret_pos = min(insert_pos + clipboard_text.length(), MAX_MESSAGE_LENGTH)
+	chat_input.set_caret_column(new_caret_pos)
 
 
 func _send_chat_message() -> void:
 	var message := chat_input.text.strip_edges()
+	if message.length() > MAX_MESSAGE_LENGTH:
+		message = message.substr(0, MAX_MESSAGE_LENGTH)
 	if message.is_empty():
 		return
+
 	chat_message_sent.emit(message)
 	chat_input.text = ""
 
-
 func _on_chat_text_changed() -> void:
 	if chat_input.text.length() > MAX_MESSAGE_LENGTH:
-		var caret_pos = chat_input.get_caret_column()
+		var caret_line = chat_input.get_caret_line()
+		var caret_col = chat_input.get_caret_column()
 		chat_input.text = chat_input.text.substr(0, MAX_MESSAGE_LENGTH)
-		chat_input.set_caret_column(min(caret_pos, MAX_MESSAGE_LENGTH))
-
+		chat_input.set_caret_line(caret_line)
+		chat_input.set_caret_column(min(caret_col, MAX_MESSAGE_LENGTH))
 
 func _on_sound_toggled(enabled: bool) -> void:
 	if AudioManager:
 		AudioManager.set_master_sound(enabled)
 
-
 func _on_pose_toggled(is_sitting: bool) -> void:
 	pass
-
 
 func _on_avatar_refresh_requested() -> void:
 	pass
 
-
 func _on_chat_log_toggled() -> void:
 	chat_log_open = not chat_log_open
 	toggle_chat_log()
-
 
 func toggle_chat_log() -> void:
 	chat_log_window.visible = chat_log_open
@@ -161,9 +182,7 @@ func add_chat_message(username: String, message: String) -> void:
 		return
 	
 	message_count += 1
-	
 	var safe_msg: String = message
-	# Escape BBCode but preserve emoji and Unicode
 	safe_msg = safe_msg.replace("\\", "\\\\")
 	safe_msg = safe_msg.replace("[", "\\[")
 	safe_msg = safe_msg.replace("]", "\\]")
@@ -205,43 +224,19 @@ func _scroll_to_bottom() -> void:
 		await get_tree().process_frame
 		chat_scroll.scroll_vertical = int(chat_scroll.get_v_scroll_bar().max_value)
 
-
-func show_chat_bubble(player_id: String, username: String, message: String, world_pos: Vector2) -> void:
-	if chat_system:
-		chat_system.show_chat_bubble(player_id, username, message, world_pos)
-
-
-func update_player_bubble_position(player_id: String, world_pos: Vector2) -> void:
-	if chat_system:
-		chat_system.update_player_position(player_id, world_pos)
-
-
-func clear_player_bubbles(player_id: String) -> void:
-	if chat_system:
-		chat_system.clear_player_bubbles(player_id)
-
-
 func set_username(username: String) -> void:
 	current_username = username
 
-
 func is_blocking_input() -> bool:
 	return chat_input.has_focus()
-
-
-func set_chat_system(system: CanvasLayer) -> void:
-	chat_system = system
-
 
 func update_location_display(map_id: int, barton_id: int) -> void:
 	if not location_label:
 		return
 	location_label.text = "%d Barton %d" % [map_id, barton_id]
 
-
 func is_sitting() -> bool:
 	return button_manager.is_player_sitting() if button_manager else false
-
 
 func is_sound_enabled() -> bool:
 	return button_manager.is_sound_enabled() if button_manager else true

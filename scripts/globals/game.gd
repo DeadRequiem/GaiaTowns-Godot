@@ -6,7 +6,7 @@ const RemotePlayerScene = preload("res://scenes/RemotePlayer.tscn")
 @onready var camera: CameraController = $Camera2D
 @onready var map_manager: Node = $MapManager
 @onready var ui: CanvasLayer = $UI
-@onready var chat_system: CanvasLayer = $ChatSystem
+@onready var world_chat_manager: Node = $WorldChatManager
 
 var remote_players: Dictionary = {}
 var update_timer: float = 0.0
@@ -25,7 +25,6 @@ func _ready() -> void:
 	setup_audio()
 	setup_connections()
 	setup_camera()
-	setup_chat()
 	
 	player.set_username(UserSession.username)
 	player.set_avatar_url(UserSession.avatar_url)
@@ -34,18 +33,15 @@ func _ready() -> void:
 	ui.set_username(UserSession.username)
 	NetworkManager.connect_to_server()
 
-
 func setup_audio() -> void:
 	if has_node("/root/AudioManager"):
 		audio_manager = get_node("/root/AudioManager")
 		print("[GAME] AudioManager found and stored")
 
-
 func setup_connections() -> void:
 	NetworkManager.connection_success.connect(_on_connection_success)
 	NetworkManager.server_disconnected.connect(_on_server_disconnected)
 	NetworkManager.connection_failed.connect(_on_connection_failed)
-	
 	Server.barton_data_received.connect(_on_barton_data_received)
 	Server.remote_player_joined.connect(_on_player_joined)
 	Server.remote_player_update.connect(_on_player_update)
@@ -55,7 +51,6 @@ func setup_connections() -> void:
 	map_manager.map_loaded.connect(_on_map_loaded)
 	map_manager.transition_completed.connect(_on_transition_completed)
 	
-	# Connect music track changes to AudioManager
 	if audio_manager and not Server.music_track_changed.is_connected(_on_music_track_changed):
 		Server.music_track_changed.connect(_on_music_track_changed)
 		print("[GAME] Connected music_track_changed signal to local handler")
@@ -67,14 +62,8 @@ func setup_connections() -> void:
 			ui.button_manager.avatar_refresh_requested.connect(_on_avatar_refresh_requested)
 		ui.chat_message_sent.connect(_on_chat_message_sent)
 
-
 func setup_camera() -> void:
 	camera.set_target(player)
-
-
-func setup_chat() -> void:
-	ui.set_chat_system(chat_system)
-
 
 func _on_music_track_changed(track_name: String) -> void:
 	print("[GAME] Music track change received: ", track_name)
@@ -84,10 +73,8 @@ func _on_music_track_changed(track_name: String) -> void:
 	else:
 		push_warning("[GAME] AudioManager not available or missing _on_music_track_changed method")
 
-
 func _on_ui_pose_toggled(is_sitting: bool) -> void:
 	player.set_kneeling(is_sitting)
-
 
 func _on_avatar_refresh_requested() -> void:
 	var clean_url = UserSession.avatar_url.split("?")[0]
@@ -96,13 +83,11 @@ func _on_avatar_refresh_requested() -> void:
 	player.load_avatar(proxied_avatar)
 	Server.send_avatar_refresh(clean_url)
 
-
 func _on_avatar_refresh_received(peer_id: String, new_avatar_url: String) -> void:
 	if remote_players.has(peer_id):
 		var clean_url = new_avatar_url.split("?")[0]
 		var proxied_avatar = UserSession.get_proxied_avatar_url(clean_url)
 		remote_players[peer_id].load_avatar(proxied_avatar)
-
 
 func _on_chat_message_sent(message: String) -> void:
 	var sanitized = sanitize_chat_message(message)
@@ -110,45 +95,29 @@ func _on_chat_message_sent(message: String) -> void:
 		return
 	Server.send_chat_message(sanitized)
 
-
 func sanitize_chat_message(message: String) -> String:
-	# Strip edges but preserve emojis and unicode
 	message = message.strip_edges()
-	
-	# Only remove BBCode brackets that could break formatting
-	# Allow emojis like 🤔 and text emotes like (っ °Д °;)っ
 	message = message.replace("[url", "").replace("[/url", "")
 	message = message.replace("[color", "").replace("[/color", "")
 	message = message.replace("[b]", "").replace("[/b]", "")
 	message = message.replace("[i]", "").replace("[/i]", "")
 	message = message.replace("[u]", "").replace("[/u]", "")
-	
 	return message
 
 
 func _on_chat_message_received(peer_id: String, sender_username: String, message: String) -> void:
 	ui.add_chat_message(sender_username, message)
-	
-	var sender_pos := Vector2.ZERO
-	var local_id := NetworkManager.get_peer_id()
-	var bubble_id := peer_id
-	
-	# Check if it's our own message
+	var local_id = NetworkManager.get_peer_id()
+
 	if peer_id == local_id or sender_username == UserSession.username:
-		sender_pos = player.global_position
-		bubble_id = local_id if not local_id.is_empty() else UserSession.username
+		var bubble_id = local_id if not local_id.is_empty() else UserSession.username
+		world_chat_manager.show_chat_bubble(player, bubble_id, sender_username, message)
 	elif remote_players.has(peer_id):
-		sender_pos = remote_players[peer_id].global_position
-		bubble_id = peer_id
-	else:
-		return
-	
-	var adjusted_pos = sender_pos + Vector2(10, 0)
-	ui.show_chat_bubble(bubble_id, sender_username, message, adjusted_pos)
+		world_chat_manager.show_chat_bubble(remote_players[peer_id], peer_id, sender_username, message)
 
 
 func _on_connection_success() -> void:
-	var spawn_pos := Vector2(768, 768)
+	var spawn_pos = Vector2(768, 768)
 	var clean_avatar = UserSession.avatar_url.split("?")[0]
 	Server.join_barton(UserSession.username, clean_avatar, map_manager.current_barton_id,
 					   map_manager.current_map_id, spawn_pos)
@@ -192,7 +161,7 @@ func _on_map_loaded(_map_id: int) -> void:
 
 func _on_transition_completed(map_id: int) -> void:
 	clear_all_remote_players()
-	var spawn_pos := player.global_position
+	var spawn_pos = player.global_position
 	Server.change_map(map_id, spawn_pos)
 
 
@@ -201,24 +170,10 @@ func clear_all_remote_players() -> void:
 		if is_instance_valid(remote_players[peer_id]):
 			remote_players[peer_id].queue_free()
 	remote_players.clear()
-	chat_system.clear_all_bubbles()
+	world_chat_manager.clear_all_bubbles()
 
 
 func _process(delta: float) -> void:
-	var local_id := NetworkManager.get_peer_id()
-	
-	# Update local player bubble position
-	var local_bubble_id = local_id if not local_id.is_empty() else UserSession.username
-	var adjusted_player_pos = player.global_position + Vector2(10, 0)
-	ui.update_player_bubble_position(local_bubble_id, adjusted_player_pos)
-	
-	# Update remote player bubble positions
-	for peer_id in remote_players.keys():
-		var rp = remote_players[peer_id]
-		if is_instance_valid(rp):
-			var adjusted_remote_pos = rp.global_position + Vector2(10, 0)
-			ui.update_player_bubble_position(peer_id, adjusted_remote_pos)
-	
 	if not Server.connected:
 		return
 	if ui.is_blocking_input():
@@ -269,4 +224,4 @@ func _on_player_left(peer_id: String) -> void:
 		if is_instance_valid(remote_players[peer_id]):
 			remote_players[peer_id].queue_free()
 		remote_players.erase(peer_id)
-	ui.clear_player_bubbles(peer_id)
+	world_chat_manager.clear_player_bubble(peer_id)

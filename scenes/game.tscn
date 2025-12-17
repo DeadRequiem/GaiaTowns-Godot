@@ -17,7 +17,14 @@
 [ext_resource type="Texture2D" uid="uid://dxs54lk1sq7yb" path="res://assets/ui/avatarRefresh.png" id="15_sww3w"]
 [ext_resource type="Texture2D" uid="uid://cwjs84a2m4xbd" path="res://assets/ui/sound1.png" id="16_suyxu"]
 [ext_resource type="Texture2D" uid="uid://bs05ve1xtr2xp" path="res://assets/ui/sound2.png" id="17_sgl2t"]
-[ext_resource type="Script" uid="uid://dh84snpvlogur" path="res://scripts/ui/ChatSystem.gd" id="18_qouja"]
+[ext_resource type="Script" uid="uid://b7f6nhtfev6sa" path="res://scripts/ui/WorldChatManager.gd" id="18_worldchat"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v2yb1"]
+bg_color = Color(0, 0, 0, 0.68235296)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wljb1"]
 bg_color = Color(0.105882354, 0.105882354, 0.105882354, 0.8392157)
@@ -28,13 +35,6 @@ border_width_bottom = 2
 border_color = Color(0.4, 0.4, 0.4, 1)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v2yb1"]
-bg_color = Color(0, 0, 0, 0.68235296)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_80nbo")
@@ -48,6 +48,9 @@ script = ExtResource("3_fc0e3")
 [node name="MapManager" type="Node" parent="."]
 script = ExtResource("3_feb5d")
 
+[node name="WorldChatManager" type="Node" parent="."]
+script = ExtResource("18_worldchat")
+
 [node name="UI" type="CanvasLayer" parent="."]
 script = ExtResource("5_ssvqc")
 
@@ -57,7 +60,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -35.0
+offset_top = -48.0
 grow_horizontal = 2
 grow_vertical = 0
 
@@ -104,9 +107,9 @@ anchors_preset = -1
 anchor_right = 0.33
 anchor_bottom = 1.0
 offset_left = 80.0
-offset_top = 2.5
+offset_top = 4.0
 offset_right = -1.0
-offset_bottom = -2.5
+offset_bottom = -4.0
 grow_horizontal = 2
 grow_vertical = 2
 caret_blink = true
@@ -194,34 +197,71 @@ texture_normal = ExtResource("15_sww3w")
 ignore_texture_size = true
 stretch_mode = 5
 
-[node name="TopRightButtons" type="Control" parent="UI"]
+[node name="TopBar" type="Control" parent="UI"]
 layout_mode = 3
-anchors_preset = 0
-offset_left = 3.0
-offset_top = 2.0
-offset_right = 43.0
-offset_bottom = 42.0
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 50.0
+offset_top = 7.0
+offset_right = -50.0
+offset_bottom = 33.0
+grow_horizontal = 2
 
-[node name="SoundButton" type="TextureButton" parent="UI/TopRightButtons"]
-custom_minimum_size = Vector2(22, 19)
-layout_mode = 0
-offset_right = 19.0
-offset_bottom = 16.0
+[node name="Background" type="Panel" parent="UI/TopBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_v2yb1")
+metadata/_edit_use_anchors_ = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UI/TopBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+metadata/_edit_use_anchors_ = true
+
+[node name="MarginLeft" type="Control" parent="UI/TopBar/HBoxContainer"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
+
+[node name="SoundButton" type="TextureButton" parent="UI/TopBar/HBoxContainer"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
 toggle_mode = true
 texture_normal = ExtResource("16_suyxu")
 texture_pressed = ExtResource("17_sgl2t")
-stretch_mode = 3
+stretch_mode = 5
+
+[node name="LocationLabel" type="Label" parent="UI/TopBar/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0.92984587, 0.9298463, 0, 1)
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MarginRight" type="Control" parent="UI/TopBar/HBoxContainer"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
 
 [node name="ChatLogWindow" type="Panel" parent="UI"]
 visible = false
-custom_minimum_size = Vector2(380, 100)
+custom_minimum_size = Vector2(390, 100)
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 10.0
 offset_top = -800.0
 offset_right = 390.0
-offset_bottom = -35.0
+offset_bottom = -48.0
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_wljb1")
 
@@ -248,21 +288,3 @@ size_flags_vertical = 3
 bbcode_enabled = true
 fit_content = true
 scroll_following = true
-
-[node name="LocationLabel" type="Label" parent="UI"]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -102.0
-offset_top = 1.0
-offset_right = -6.0
-offset_bottom = 24.0
-grow_horizontal = 0
-theme_override_colors/font_color = Color(0.92984587, 0.9298463, 0, 1)
-theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxFlat_v2yb1")
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="ChatSystem" type="CanvasLayer" parent="."]
-script = ExtResource("18_qouja")

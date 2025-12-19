@@ -1,10 +1,13 @@
 extends CharacterBody2D
 
-# Interpolation tuning
 const INTERPOLATION_SPEED: float = 15.0
 const POSITION_THRESHOLD: float = 5.0
 const TELEPORT_THRESHOLD: float = 200.0
 const KNEEL_Y_OFFSET: float = 25.0
+const CARRY_OFFSET: Vector2 = Vector2(0, -40)
+
+const THROW_DURATION: float = 0.6
+const THROW_PEAK_HEIGHT: float = 80.0
 
 const FRAME_TORSO_FRONT: = 0
 const FRAME_TORSO_BACK: = 1
@@ -42,6 +45,16 @@ var leg_timer: float = 0.0
 var leg_frame_time: float = 0.12
 var is_loading: bool = false
 var pending_url: String = ""
+var is_being_carried: bool = false
+var is_carrying_someone: bool = false
+var carrier_node: Node2D = null
+
+var is_thrown: bool = false
+var throw_start: Vector2 = Vector2.ZERO
+var throw_end: Vector2 = Vector2.ZERO
+var throw_timer: float = 0.0
+var throw_duration: float = THROW_DURATION
+var throw_peak: float = THROW_PEAK_HEIGHT
 
 signal avatar_loaded()
 
@@ -59,18 +72,17 @@ func _ready() -> void:
 	if not username_label:
 		push_error("RemotePlayer: UsernameLabel node not found!")
 		return
-	
+
 	setup_sprite_rendering()
-	
+
 	if not http_request.request_completed.is_connected(_on_http_request_completed):
 		http_request.request_completed.connect(_on_http_request_completed)
 
 
 func setup_sprite_rendering() -> void:
-	"Configure sprites for sharp, high-quality rendering"
 	if torso_sprite:
 		torso_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	
+
 	if legs_sprite:
 		legs_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 
@@ -90,58 +102,96 @@ func set_username(new_username: String) -> void:
 	if username_label:
 		username_label.set_username(username)
 		await get_tree().process_frame
-		
-		var label_width = username_label.size.x
+
+		var label_width: float = username_label.size.x
 		username_label.position.x = -label_width / 2.0 + 10.0
 		username_label.position.y = 76.0
 
 
 func update_from_network(pos: Vector2, state: Dictionary, facing: Dictionary) -> void:
-	# Calculate distance to new position
-	var distance = global_position.distance_to(pos)
-	
-	# TELEPORT if way too far (likely map change or major desync)
+	var distance: float = global_position.distance_to(pos)
+
 	if distance > TELEPORT_THRESHOLD:
 		global_position = pos
 		target_position = pos
 	else:
-		# Set target for smooth interpolation
-		target_position = pos
-	
-	# Update state
+		if not is_being_carried and not is_thrown:
+			target_position = pos
+
 	is_walking = state.get("is_moving", false)
 	is_kneeling = state.get("is_kneeling", false)
 	in_water = state.get("in_water", false)
+	is_being_carried = state.get("is_being_carried", false)
+	is_carrying_someone = state.get("is_carrying", false)
+
 	face = facing.get("direction", "front")
 	facing_lr = facing.get("facing_lr", "right")
 
 
+func set_carrier_node(node: Node2D) -> void:
+	carrier_node = node
+
+
+func set_thrown(target_pos: Vector2, duration: float = THROW_DURATION, peak: float = THROW_PEAK_HEIGHT) -> void:
+	is_thrown = true
+	throw_start = global_position
+	throw_end = target_pos
+	throw_timer = 0.0
+	throw_duration = duration
+	throw_peak = peak
+	is_being_carried = false
+	carrier_node = null
+
+
 func _process(delta: float) -> void:
-	# Smooth interpolation to target position
-	var distance := global_position.distance_to(target_position)
-	
+	if is_thrown:
+		_process_throw(delta)
+		return
+
+	if is_being_carried and carrier_node and is_instance_valid(carrier_node):
+		var desired_pos: Vector2 = carrier_node.global_position + CARRY_OFFSET
+		global_position = global_position.lerp(desired_pos, 20.0 * delta)
+		update_animation(delta, is_walking, is_kneeling, in_water)
+		z_index = int(get_feet_position().y)
+		update_sprite_offset()
+		global_position = global_position.round()
+		return
+
+	var distance: float = global_position.distance_to(target_position)
+
 	if distance > POSITION_THRESHOLD:
-		# Lerp smoothly toward target
-		var old_pos := global_position
+		var old_pos: Vector2 = global_position
 		global_position = global_position.lerp(target_position, INTERPOLATION_SPEED * delta)
-		
-		# Calculate velocity for facing direction updates
-		var vel := (global_position - old_pos) / delta
+		var vel: Vector2 = (global_position - old_pos) / delta
 		if vel.length() > 10.0:
 			update_facing(vel)
 	else:
-		# Snap to target when very close to prevent micro-jitter
 		global_position = target_position
-	
+
 	update_animation(delta, is_walking, is_kneeling, in_water)
 	z_index = int(get_feet_position().y)
 	update_sprite_offset()
-	global_position = global_position.round()  # Pixel-perfect positioning
+	global_position = global_position.round()
 
 
-func update_sprite_offset() -> void:
-	var offset_y := KNEEL_Y_OFFSET if is_kneeling else 0.0
-	set_visual_offset(offset_y)
+func _process_throw(delta: float) -> void:
+	throw_timer += delta
+	var t: float = clamp(throw_timer / throw_duration, 0.0, 1.0)
+	var horiz: Vector2 = throw_start.lerp(throw_end, t)
+	var arc_y: float = 4.0 * throw_peak * t * (1.0 - t)
+	global_position = Vector2(horiz.x, horiz.y - arc_y)
+
+	update_animation(delta, is_walking, is_kneeling, in_water)
+	z_index = int(get_feet_position().y)
+	update_sprite_offset()
+	global_position = global_position.round()
+
+	if throw_timer >= throw_duration:
+		is_thrown = false
+		throw_timer = 0.0
+		global_position = throw_end
+		target_position = throw_end
+		return
 
 
 func get_feet_position() -> Vector2:
@@ -153,11 +203,9 @@ func load_avatar(url: String) -> void:
 	if url.is_empty():
 		push_error("Empty avatar URL for remote player %s" % peer_id)
 		return
-	
 	if not http_request:
 		push_error("RemotePlayer: Cannot load avatar - HTTPRequest node missing")
 		return
-	
 	if url.begins_with("res://"):
 		strip_texture = load(url)
 		if strip_texture:
@@ -169,31 +217,18 @@ func load_avatar(url: String) -> void:
 			push_error("Failed to load local avatar: " + url)
 			load_fallback_avatar()
 		return
-	
-	var strip_url := to_strip_url(url)
+	var strip_url: String = to_strip_url(url)
 	if is_loading:
 		pending_url = strip_url
 		return
-	
 	avatar_url = strip_url
 	is_loading = true
-	
-	var final_url := strip_url
-	if not "?t=" in final_url and not "?" in final_url:
-		final_url = strip_url + "?t=" + str(Time.get_unix_time_from_system())
-	
-	var headers := PackedStringArray([
-		"Referer: https://www.gaiaonline.com/",
-		"Cache-Control: no-cache, no-store, must-revalidate",
-		"Pragma: no-cache"
-	])
-	
-	print("Loading avatar from: %s" % final_url)
-	http_request.request(final_url, headers)
+
+	print("Loading avatar from: %s" % strip_url)
+	http_request.request(strip_url)
 
 
 func apply_texture_quality_settings() -> void:
-	"Apply quality settings to loaded texture"
 	if strip_texture and strip_texture is ImageTexture:
 		pass
 
@@ -201,16 +236,16 @@ func apply_texture_quality_settings() -> void:
 func to_strip_url(url: String) -> String:
 	if url.is_empty():
 		return ""
-	
+
 	var parts := url.split("?")
 	var base_url := parts[0]
 	var query_params := parts[1] if parts.size() > 1 else ""
-	
+
 	if base_url.ends_with("_flip.png"):
 		base_url = base_url.replace("_flip.png", "_strip.png")
 	elif base_url.ends_with(".png") and not base_url.ends_with("_strip.png"):
 		base_url = base_url.replace(".png", "_strip.png")
-	
+
 	if not query_params.is_empty():
 		return base_url + "?" + query_params
 	return base_url
@@ -223,19 +258,19 @@ func _on_http_request_completed(
 	body: PackedByteArray
 ) -> void:
 	is_loading = false
-	
+
 	if result != OK or response_code != 200:
 		push_error("Failed to download avatar: result=%d, code=%d" % [result, response_code])
 		load_fallback_avatar()
 		check_pending_load()
 		return
-	
+
 	if body.size() == 0:
 		push_error("Received empty body from avatar request")
 		load_fallback_avatar()
 		check_pending_load()
 		return
-	
+
 	var img := Image.new()
 	var load_result := img.load_png_from_buffer(body)
 	if load_result != OK:
@@ -243,7 +278,7 @@ func _on_http_request_completed(
 		load_fallback_avatar()
 		check_pending_load()
 		return
-	
+
 	strip_texture = ImageTexture.create_from_image(img)
 	apply_texture_quality_settings()
 	slice_strip()
@@ -253,7 +288,6 @@ func _on_http_request_completed(
 
 
 func load_fallback_avatar() -> void:
-	"Load the fallback avatar when remote loading fails"
 	if ResourceLoader.exists(FALLBACK_AVATAR):
 		strip_texture = load(FALLBACK_AVATAR)
 		apply_texture_quality_settings()
@@ -265,9 +299,8 @@ func load_fallback_avatar() -> void:
 
 
 func check_pending_load() -> void:
-	"Check if there's a pending avatar load request"
 	if not pending_url.is_empty():
-		var url_to_load := pending_url
+		var url_to_load: String = pending_url
 		pending_url = ""
 		load_avatar(url_to_load)
 
@@ -277,16 +310,16 @@ func slice_strip() -> void:
 	leg_frames.clear()
 	if not strip_texture:
 		return
-	
-	var frame_width := strip_texture.get_width() / 10.0
-	var frame_height := float(strip_texture.get_height())
-	
+
+	var frame_width: float = strip_texture.get_width() / 10.0
+	var frame_height: float = float(strip_texture.get_height())
+
 	for i in range(10):
-		var tex := AtlasTexture.new()
+		var tex: AtlasTexture = AtlasTexture.new()
 		tex.atlas = strip_texture
 		tex.region = Rect2(i * frame_width, 0, frame_width, frame_height)
 		frames.append(tex)
-	
+
 	leg_frames = frames.slice(FRAME_WALK_LEG_1, FRAME_WALK_LEG_4 + 1)
 
 
@@ -302,15 +335,15 @@ func update_animation(delta: float, is_walking_state: bool, is_kneeling_state: b
 		legs_sprite.visible = false
 		leg_timer = 0.0
 		leg_index = 0
-	
+
 	if frames.size() > 0:
-		var frame_idx := get_torso_frame(is_walking_state, is_kneeling_state)
+		var frame_idx: int = get_torso_frame(is_walking_state, is_kneeling_state)
 		torso_sprite.texture = frames[frame_idx]
-	
-	var flip := (facing_lr == "right")
+
+	var flip: bool = (facing_lr == "right")
 	torso_sprite.flip_h = flip
 	legs_sprite.flip_h = flip
-	
+
 	if facing_lr == "right":
 		torso_sprite.position.x = 20
 		legs_sprite.position.x = 20
@@ -337,10 +370,15 @@ func get_torso_frame(is_walking_state: bool, is_kneeling_state: bool) -> int:
 		return FRAME_KNEEL_BACK if face == "back" else FRAME_KNEEL_FRONT
 	if is_walking_state:
 		return FRAME_TORSO_BACK if face == "back" else FRAME_TORSO_FRONT
-	
+
 	return FRAME_STAND_BACK if face == "back" else FRAME_STAND_FRONT
 
 
 func set_visual_offset(offset_y: float) -> void:
 	torso_sprite.position.y = offset_y
 	legs_sprite.position.y = offset_y
+
+
+func update_sprite_offset() -> void:
+	var offset_y: float = KNEEL_Y_OFFSET if is_kneeling else 0.0
+	set_visual_offset(offset_y)

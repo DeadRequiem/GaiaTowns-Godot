@@ -21,11 +21,11 @@ func _ready() -> void:
 		if OS.has_feature("web"):
 			JavaScriptBridge.eval("window.location.href = '/';")
 		return
-	
+
 	setup_audio()
 	setup_connections()
 	setup_camera()
-	
+
 	player.set_username(UserSession.username)
 	player.set_avatar_url(UserSession.avatar_url)
 	var proxied_avatar = UserSession.get_proxied_avatar_url(UserSession.avatar_url)
@@ -33,10 +33,12 @@ func _ready() -> void:
 	ui.set_username(UserSession.username)
 	NetworkManager.connect_to_server()
 
+
 func setup_audio() -> void:
 	if has_node("/root/AudioManager"):
 		audio_manager = get_node("/root/AudioManager")
 		print("[GAME] AudioManager found and stored")
+
 
 func setup_connections() -> void:
 	NetworkManager.connection_success.connect(_on_connection_success)
@@ -48,13 +50,18 @@ func setup_connections() -> void:
 	Server.remote_player_left.connect(_on_player_left)
 	Server.chat_message_received.connect(_on_chat_message_received)
 	Server.avatar_refresh_received.connect(_on_avatar_refresh_received)
+	Server.player_pickup_received.connect(_on_player_pickup)
+	Server.player_thrown_received.connect(_on_player_thrown)
+	Server.player_dropped_received.connect(_on_player_dropped)
+	Server.command_response_received.connect(_on_command_response)
+
 	map_manager.map_loaded.connect(_on_map_loaded)
 	map_manager.transition_completed.connect(_on_transition_completed)
-	
+
 	if audio_manager and not Server.music_track_changed.is_connected(_on_music_track_changed):
 		Server.music_track_changed.connect(_on_music_track_changed)
 		print("[GAME] Connected music_track_changed signal to local handler")
-	
+
 	if ui:
 		await get_tree().process_frame
 		if ui.button_manager:
@@ -62,8 +69,10 @@ func setup_connections() -> void:
 			ui.button_manager.avatar_refresh_requested.connect(_on_avatar_refresh_requested)
 		ui.chat_message_sent.connect(_on_chat_message_sent)
 
+
 func setup_camera() -> void:
 	camera.set_target(player)
+
 
 func _on_music_track_changed(track_name: String) -> void:
 	print("[GAME] Music track change received: ", track_name)
@@ -73,8 +82,10 @@ func _on_music_track_changed(track_name: String) -> void:
 	else:
 		push_warning("[GAME] AudioManager not available or missing _on_music_track_changed method")
 
+
 func _on_ui_pose_toggled(is_sitting: bool) -> void:
 	player.set_kneeling(is_sitting)
+
 
 func _on_avatar_refresh_requested() -> void:
 	var clean_url = UserSession.avatar_url.split("?")[0]
@@ -83,17 +94,20 @@ func _on_avatar_refresh_requested() -> void:
 	player.load_avatar(proxied_avatar)
 	Server.send_avatar_refresh(clean_url)
 
+
 func _on_avatar_refresh_received(peer_id: String, new_avatar_url: String) -> void:
 	if remote_players.has(peer_id):
 		var clean_url = new_avatar_url.split("?")[0]
 		var proxied_avatar = UserSession.get_proxied_avatar_url(clean_url)
 		remote_players[peer_id].load_avatar(proxied_avatar)
 
+
 func _on_chat_message_sent(message: String) -> void:
 	var sanitized = sanitize_chat_message(message)
 	if sanitized.is_empty():
 		return
 	Server.send_chat_message(sanitized)
+
 
 func sanitize_chat_message(message: String) -> String:
 	message = message.strip_edges()
@@ -143,7 +157,7 @@ func _on_map_loaded(_map_id: int) -> void:
 		if is_instance_valid(current_objects_node):
 			current_objects_node.queue_free()
 		current_objects_node = null
-	
+
 	await get_tree().process_frame
 	if map_manager.current_map:
 		add_child(map_manager.current_map)
@@ -152,10 +166,10 @@ func _on_map_loaded(_map_id: int) -> void:
 			objects_node.reparent(self)
 			current_objects_node = objects_node
 	camera.set_map_bounds(map_manager.map_width, map_manager.map_height)
-	
+
 	if player.global_position == Vector2.ZERO:
 		player.global_position = map_manager.get_spawn_position_for_map()
-	
+
 	ui.update_location_display(map_manager.current_map_id, map_manager.current_barton_id)
 
 
@@ -176,9 +190,7 @@ func clear_all_remote_players() -> void:
 func _process(delta: float) -> void:
 	if not Server.connected:
 		return
-	if ui.is_blocking_input():
-		return
-	
+
 	update_timer += delta
 	if update_timer >= UPDATE_INTERVAL:
 		update_timer -= UPDATE_INTERVAL
@@ -186,6 +198,8 @@ func _process(delta: float) -> void:
 
 
 func send_player_state() -> void:
+	if player.is_being_carried or player.is_thrown:
+		return
 	var state = player.get_state()
 	var facing = player.get_facing()
 	Server.send_player_update(player.global_position, state, facing)
@@ -193,17 +207,17 @@ func send_player_state() -> void:
 
 func _on_player_joined(peer_id: String, player_username: String, avatar_url_remote: String,
 		pos: Vector2, state: Dictionary, facing: Dictionary) -> void:
-	
+
 	if remote_players.has(peer_id):
 		push_warning("Player %s already exists, removing old instance" % peer_id)
 		var old_player = remote_players[peer_id]
 		remote_players.erase(peer_id)
-		
+
 		if is_instance_valid(old_player):
 			old_player.queue_free()
-		
+
 		await get_tree().process_frame
-	
+
 	var remote_player = RemotePlayerScene.instantiate()
 	remote_player.name = "RemotePlayer_%s" % peer_id
 	add_child(remote_player)
@@ -213,13 +227,100 @@ func _on_player_joined(peer_id: String, player_username: String, avatar_url_remo
 	remote_players[peer_id] = remote_player
 
 
+func _on_player_pickup(carrier_peer_id: String, carried_peer_id: String) -> void:
+	var local_id = NetworkManager.get_peer_id()
+
+	if carrier_peer_id == local_id:
+		if remote_players.has(carried_peer_id):
+			player.set_carrying_someone(true, carried_peer_id)
+			remote_players[carried_peer_id].set_carrier_node(player)
+			remote_players[carried_peer_id].is_being_carried = true
+			remote_players[carried_peer_id].global_position = player.global_position + remote_players[carried_peer_id].CARRY_OFFSET
+			remote_players[carried_peer_id].target_position = remote_players[carried_peer_id].global_position
+			print("[GAME] We picked up: ", remote_players[carried_peer_id].username)
+
+	elif carried_peer_id == local_id:
+		player.set_being_carried(true, carrier_peer_id)
+		if remote_players.has(carrier_peer_id):
+			player.set_carrier_node(remote_players[carrier_peer_id])
+			player.global_position = remote_players[carrier_peer_id].global_position + player.CARRY_OFFSET
+		print("[GAME] We are being carried!")
+		ui.add_chat_message("System", "You are being carried!")
+
+	if remote_players.has(carrier_peer_id):
+		remote_players[carrier_peer_id].is_carrying_someone = true
+
+	if remote_players.has(carried_peer_id):
+		remote_players[carried_peer_id].is_being_carried = true
+		if carrier_peer_id == local_id and remote_players.has(carried_peer_id):
+			remote_players[carried_peer_id].set_carrier_node(player)
+
+
+func _on_player_thrown(thrower_peer_id: String, thrown_peer_id: String, new_x: float, new_y: float) -> void:
+	var local_id = NetworkManager.get_peer_id()
+
+	if thrower_peer_id == local_id:
+		player.set_carrying_someone(false, "")
+
+	if thrown_peer_id == local_id:
+		player.set_being_carried(false, "")
+		player.set_carrier_node(null)
+		player.set_thrown(Vector2(new_x, new_y))
+
+	if remote_players.has(thrower_peer_id):
+		remote_players[thrower_peer_id].is_carrying_someone = false
+
+	if remote_players.has(thrown_peer_id):
+		remote_players[thrown_peer_id].is_being_carried = false
+		remote_players[thrown_peer_id].set_carrier_node(null)
+		remote_players[thrown_peer_id].set_thrown(Vector2(new_x, new_y))
+
+
+func _on_player_dropped(carrier_peer_id: String, dropped_peer_id: String, new_x: float, new_y: float) -> void:
+	var local_id = NetworkManager.get_peer_id()
+
+	if carrier_peer_id == local_id:
+		player.set_carrying_someone(false, "")
+
+	if dropped_peer_id == local_id:
+		player.set_being_carried(false, "")
+		player.set_carrier_node(null)
+		player.global_position = Vector2(new_x, new_y)
+
+	if remote_players.has(carrier_peer_id):
+		remote_players[carrier_peer_id].is_carrying_someone = false
+
+	if remote_players.has(dropped_peer_id):
+		remote_players[dropped_peer_id].is_being_carried = false
+		remote_players[dropped_peer_id].set_carrier_node(null)
+		remote_players[dropped_peer_id].global_position = Vector2(new_x, new_y)
+		remote_players[dropped_peer_id].target_position = Vector2(new_x, new_y)
+
+
+func _on_command_response(message: String, is_error: bool) -> void:
+	var prefix = "[ERROR] " if is_error else "[SYSTEM] "
+	ui.add_chat_message("System", prefix + message)
+
+
 func _on_player_update(peer_id: String, pos: Vector2, state: Dictionary, facing: Dictionary) -> void:
+	var local_id = NetworkManager.get_peer_id()
+	
+	if peer_id == local_id:
+		if player.is_being_carried:
+			return
+		return
+	
 	if remote_players.has(peer_id):
 		remote_players[peer_id].update_from_network(pos, state, facing)
 
 
 func _on_player_left(peer_id: String) -> void:
-	print("Player %s left - cleaning up" % peer_id)
+	if player.is_being_carried and player.carried_by_peer_id == peer_id:
+		player.set_being_carried(false, "")
+		player.set_carrier_node(null)
+		ui.add_chat_message("System", "You were dropped because your carrier left!")
+	if player.is_carrying_someone and player.carrying_peer_id == peer_id:
+		player.set_carrying_someone(false, "")
 	if remote_players.has(peer_id):
 		if is_instance_valid(remote_players[peer_id]):
 			remote_players[peer_id].queue_free()

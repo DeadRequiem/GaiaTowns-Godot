@@ -1,6 +1,6 @@
 extends Node
 
-const USE_PRODUCTION_SERVER = false
+const USE_PRODUCTION_SERVER = true
 
 const PRODUCTION_URL = "wss://deaddreamers.com/ws"
 const LOCAL_URL = "ws://127.0.0.1:9090"

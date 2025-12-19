@@ -3,6 +3,10 @@ extends CharacterBody2D
 const ARRIVAL_THRESHOLD: float = 5.0
 const BASE_SPEED: float = 150.0
 const KNEEL_Y_OFFSET: float = 25.0
+const CARRY_OFFSET: Vector2 = Vector2(0, -40)
+
+const THROW_DURATION: float = 0.6
+const THROW_PEAK_HEIGHT: float = 80.0
 
 const FRAME_TORSO_FRONT: = 0
 const FRAME_TORSO_BACK: = 1
@@ -47,6 +51,19 @@ var leg_timer: float = 0.0
 var leg_frame_time: float = 0.12
 var is_loading: bool = false
 var pending_url: String = ""
+var is_being_carried: bool = false
+var is_carrying_someone: bool = false
+var carried_by_peer_id: String = ""
+var carrying_peer_id: String = ""
+var carrier_node: Node2D = null
+
+var is_thrown: bool = false
+var throw_start: Vector2 = Vector2.ZERO
+var throw_end: Vector2 = Vector2.ZERO
+var throw_timer: float = 0.0
+var throw_duration: float = THROW_DURATION
+var throw_peak: float = THROW_PEAK_HEIGHT
+
 signal avatar_loaded()
 
 
@@ -82,7 +99,6 @@ func _ready() -> void:
 
 
 func setup_sprite_rendering() -> void:
-	"Configure sprites for sharp, high-quality rendering"
 	if torso_sprite:
 		torso_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 
@@ -91,7 +107,6 @@ func setup_sprite_rendering() -> void:
 
 
 func _on_preference_changed(key: String, value: Variant) -> void:
-	"Handle preference changes in real-time"
 	match key:
 		"speed_multiplier":
 			speed_multiplier = value
@@ -100,11 +115,11 @@ func _on_preference_changed(key: String, value: Variant) -> void:
 
 
 func apply_avatar_hue_shift(hue: float) -> void:
-	"Apply hue shift to avatar sprites"
 	if torso_sprite:
 		torso_sprite.modulate = Color.from_hsv(hue, 1.0, 1.0)
 	if legs_sprite:
 		legs_sprite.modulate = Color.from_hsv(hue, 1.0, 1.0)
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -116,6 +131,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func update_keyboard_input() -> void:
+	if get_tree().get_first_node_in_group("ui"):
+		var ui = get_tree().get_first_node_in_group("ui")
+		if ui.is_blocking_input():
+			return
+
 	key_left = Input.is_action_pressed("move_left")
 	key_right = Input.is_action_pressed("move_right")
 	key_up = Input.is_action_pressed("move_up")
@@ -134,6 +154,7 @@ func clear_mouse_target() -> void:
 	has_mouse_target = false
 	mouse_target = Vector2.ZERO
 
+
 func set_username(new_username: String) -> void:
 	username = new_username
 	if username_label:
@@ -141,7 +162,7 @@ func set_username(new_username: String) -> void:
 		await get_tree().process_frame
 
 		var label_width = username_label.size.x
-		username_label.position.x = -label_width / 2.0 + 10.0  # Add 10px offset for centered avatar
+		username_label.position.x = -label_width / 2.0 + 10.0
 		username_label.position.y = 76.0
 
 
@@ -156,9 +177,22 @@ func set_kneeling(kneeling: bool) -> void:
 
 
 func _process(delta: float) -> void:
-	update_keyboard_input()
+	if is_thrown:
+		_process_throw(delta)
+		return
 
-	var vel: = calculate_velocity(delta)
+	if is_being_carried:
+		if carrier_node and is_instance_valid(carrier_node):
+			var desired_pos: Vector2 = carrier_node.global_position + CARRY_OFFSET
+			global_position = global_position.lerp(desired_pos, 20.0 * delta)
+		update_animation(delta, false, is_kneeling, in_water)
+		z_index = int(get_feet_position().y)
+		update_sprite_offset()
+		global_position = global_position.round()
+		return
+
+	update_keyboard_input()
+	var vel: Vector2 = calculate_velocity(delta)
 	if vel != Vector2.ZERO:
 		update_facing(vel)
 		if not is_kneeling:
@@ -170,23 +204,70 @@ func _process(delta: float) -> void:
 	else:
 		is_walking = false
 		velocity = Vector2.ZERO
-
 	move_and_slide()
-
 	update_animation(delta, is_walking, is_kneeling, in_water)
 	z_index = int(get_feet_position().y)
 	update_sprite_offset()
 	global_position = global_position.round()
 
 
-func update_sprite_offset() -> void:
-	var offset_y: = KNEEL_Y_OFFSET if is_kneeling else 0.0
-	set_visual_offset(offset_y)
+func _process_throw(delta: float) -> void:
+	throw_timer += delta
+	var t: float = clamp(throw_timer / throw_duration, 0.0, 1.0)
+	var horiz: Vector2 = throw_start.lerp(throw_end, t)
+	var arc_y: float = 4.0 * throw_peak * t * (1.0 - t)
+	global_position = Vector2(horiz.x, horiz.y - arc_y)
+	update_animation(delta, false, is_kneeling, in_water)
+	z_index = int(get_feet_position().y)
+	update_sprite_offset()
+	global_position = global_position.round()
+
+	if throw_timer >= throw_duration:
+		is_thrown = false
+		throw_timer = 0.0
+		global_position = throw_end
+		return
+
+
+func set_being_carried(carried: bool, carrier_peer: String = "") -> void:
+	is_being_carried = carried
+	carried_by_peer_id = carrier_peer
+
+	if carried:
+		is_walking = false
+		velocity = Vector2.ZERO
+		has_mouse_target = false
+		mouse_target = Vector2.ZERO
+	else:
+		carrier_node = null
+
+
+func set_carrying_someone(carrying: bool, carried_peer: String = "") -> void:
+	is_carrying_someone = carrying
+	carrying_peer_id = carried_peer
+
+
+func set_carrier_node(node: Node2D) -> void:
+	carrier_node = node
+
+
+func set_thrown(target_pos: Vector2, duration: float = THROW_DURATION, peak: float = THROW_PEAK_HEIGHT) -> void:
+	is_thrown = true
+	throw_start = global_position
+	throw_end = target_pos
+	throw_timer = 0.0
+	throw_duration = duration
+	throw_peak = peak
+	is_being_carried = false
+	carrier_node = null
 
 
 func calculate_velocity(_delta: float) -> Vector2:
-	var speed: = BASE_SPEED * speed_multiplier
-	var vel: = Vector2.ZERO
+	if is_being_carried:
+		return Vector2.ZERO
+
+	var speed: float = BASE_SPEED * speed_multiplier
+	var vel: Vector2 = Vector2.ZERO
 	var keyboard_direction: Vector2 = get_movement_direction()
 
 	if keyboard_direction != Vector2.ZERO:
@@ -211,7 +292,9 @@ func get_state() -> Dictionary:
 	return {
 		"is_moving": is_walking,
 		"in_water": in_water,
-		"is_kneeling": is_kneeling
+		"is_kneeling": is_kneeling,
+		"is_being_carried": is_being_carried,
+		"is_carrying": is_carrying_someone
 	}
 
 
@@ -224,6 +307,7 @@ func get_facing() -> Dictionary:
 
 func get_feet_position() -> Vector2:
 	return global_position + Vector2(0, 60)
+
 
 func load_avatar(url: String) -> void:
 	avatar_url = url
@@ -260,7 +344,6 @@ func load_avatar(url: String) -> void:
 
 
 func apply_texture_quality_settings() -> void:
-	"Apply quality settings to loaded texture"
 	if strip_texture and strip_texture is ImageTexture:
 		pass
 
@@ -293,7 +376,6 @@ func _on_http_request_completed(
 		check_pending_load()
 		return
 
-
 	strip_texture = ImageTexture.create_from_image(img)
 	apply_texture_quality_settings()
 	slice_strip()
@@ -303,7 +385,6 @@ func _on_http_request_completed(
 
 
 func load_fallback_avatar() -> void:
-	"Load the fallback avatar when remote loading fails"
 	if ResourceLoader.exists(FALLBACK_AVATAR):
 		strip_texture = load(FALLBACK_AVATAR)
 		apply_texture_quality_settings()
@@ -315,9 +396,8 @@ func load_fallback_avatar() -> void:
 
 
 func check_pending_load() -> void:
-	"Check if there's a pending avatar load request"
 	if not pending_url.is_empty():
-		var url_to_load: = pending_url
+		var url_to_load: String = pending_url
 		pending_url = ""
 		load_avatar(url_to_load)
 
@@ -328,20 +408,16 @@ func slice_strip() -> void:
 	if not strip_texture:
 		return
 
-	var frame_width: = strip_texture.get_width() / 10.0
-	var frame_height: = float(strip_texture.get_height())
-
-	print("Strip texture size: %dx%d" % [strip_texture.get_width(), strip_texture.get_height()])
-	print("Frame size: %dx%d" % [frame_width, frame_height])
+	var frame_width: float = strip_texture.get_width() / 10.0
+	var frame_height: float = float(strip_texture.get_height())
 
 	for i in range(10):
-		var tex: = AtlasTexture.new()
+		var tex: AtlasTexture = AtlasTexture.new()
 		tex.atlas = strip_texture
 		tex.region = Rect2(i * frame_width, 0, frame_width, frame_height)
 		frames.append(tex)
 
 	leg_frames = frames.slice(FRAME_WALK_LEG_1, FRAME_WALK_LEG_4 + 1)
-	print("Frames created: %d, Leg frames: %d" % [frames.size(), leg_frames.size()])
 
 
 func update_animation(delta: float, is_walking_state: bool, is_kneeling_state: bool, in_water_state: bool) -> void:
@@ -358,10 +434,10 @@ func update_animation(delta: float, is_walking_state: bool, is_kneeling_state: b
 		leg_index = 0
 
 	if frames.size() > 0:
-		var frame_idx: = get_torso_frame(is_walking_state, is_kneeling_state)
+		var frame_idx: int = get_torso_frame(is_walking_state, is_kneeling_state)
 		torso_sprite.texture = frames[frame_idx]
 
-	var flip: = (facing_lr == "right")
+	var flip: bool = (facing_lr == "right")
 	torso_sprite.flip_h = flip
 	legs_sprite.flip_h = flip
 
@@ -406,5 +482,12 @@ func get_facing_lr() -> String:
 
 
 func set_visual_offset(offset_y: float) -> void:
-	torso_sprite.position.y = offset_y
-	legs_sprite.position.y = offset_y
+	var carry_offset_y: float = CARRY_OFFSET.y if is_being_carried else 0.0
+	var total_offset: float = offset_y + carry_offset_y
+	torso_sprite.position.y = total_offset
+	legs_sprite.position.y = total_offset
+
+
+func update_sprite_offset() -> void:
+	var offset_y: float = KNEEL_Y_OFFSET if is_kneeling else 0.0
+	set_visual_offset(offset_y)

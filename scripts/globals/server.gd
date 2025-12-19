@@ -9,6 +9,10 @@ signal chat_message_received(peer_id, username, message)
 signal music_track_changed(track_name)
 signal avatar_refresh_received(peer_id, avatar_url)
 signal admin_status_confirmed(is_admin)
+signal player_pickup_received(carrier_peer_id, carried_peer_id)
+signal player_thrown_received(thrower_peer_id, thrown_peer_id, new_x, new_y)
+signal player_dropped_received(carrier_peer_id, dropped_peer_id, new_x, new_y)
+signal command_response_received(message, is_error)
 
 var connected: bool:
 	get:
@@ -30,9 +34,9 @@ func _on_message_received(data: Dictionary):
 	if not data.has("type"):
 		push_warning("Message missing 'type' field")
 		return
-	
+
 	var msg_type = data["type"]
-	
+
 	match msg_type:
 		"peer_id_assigned":
 			_handle_peer_id_assigned(data)
@@ -52,6 +56,14 @@ func _on_message_received(data: Dictionary):
 			_handle_music_track_changed(data)
 		"admin_status":
 			_handle_admin_status(data)
+		"player_pickup":
+			_handle_player_pickup(data)
+		"player_thrown":
+			_handle_player_thrown(data)
+		"player_dropped":
+			_handle_player_dropped(data)
+		"command_response":
+			_handle_command_response(data)
 		"error":
 			_handle_error(data)
 		_:
@@ -69,12 +81,12 @@ func _handle_barton_data(data: Dictionary):
 	var barton_id = data.get("barton_id", 1000)
 	var current_map_id = data.get("current_map_id", 5)
 	var grid = data.get("grid", [])
-	
+
 	var barton_data = {
 		"barton_id": barton_id,
 		"grid": grid
 	}
-	
+
 	barton_data_received.emit(barton_data, current_map_id)
 
 
@@ -88,7 +100,7 @@ func _handle_player_joined(data: Dictionary):
 	)
 	var state = data.get("state", {})
 	var facing = data.get("facing", {})
-	
+
 	remote_player_joined.emit(peer_id, username, avatar_url, pos, state, facing)
 
 
@@ -100,7 +112,7 @@ func _handle_player_update(data: Dictionary):
 	)
 	var state = data.get("state", {})
 	var facing = data.get("facing", {})
-	
+
 	remote_player_update.emit(peer_id, pos, state, facing)
 
 
@@ -113,14 +125,14 @@ func _handle_chat_message(data: Dictionary):
 	var peer_id = data.get("peer_id", "")
 	var username = data.get("username", "Player")
 	var message = data.get("message", "")
-	
+
 	chat_message_received.emit(peer_id, username, message)
 
 
 func _handle_avatar_refreshed(data: Dictionary):
 	var peer_id = data.get("peer_id", "")
 	var avatar_url = data.get("avatar_url", "")
-	
+
 	avatar_refresh_received.emit(peer_id, avatar_url)
 
 
@@ -142,6 +154,38 @@ func _handle_error(data: Dictionary):
 	print("[SERVER ERROR] " + error_message)
 
 
+func _handle_player_pickup(data: Dictionary):
+	var carrier_peer_id = data.get("carrier_peer_id", "")
+	var carried_peer_id = data.get("carried_peer_id", "")
+
+	player_pickup_received.emit(carrier_peer_id, carried_peer_id)
+
+
+func _handle_player_thrown(data: Dictionary):
+	var thrower_peer_id = data.get("thrower_peer_id", "")
+	var thrown_peer_id = data.get("thrown_peer_id", "")
+	var new_x = data.get("new_x", 0.0)
+	var new_y = data.get("new_y", 0.0)
+
+	player_thrown_received.emit(thrower_peer_id, thrown_peer_id, new_x, new_y)
+
+
+func _handle_player_dropped(data: Dictionary):
+	var carrier_peer_id = data.get("carrier_peer_id", "")
+	var dropped_peer_id = data.get("dropped_peer_id", "")
+	var new_x = data.get("new_x", 0.0)
+	var new_y = data.get("new_y", 0.0)
+
+	player_dropped_received.emit(carrier_peer_id, dropped_peer_id, new_x, new_y)
+
+
+func _handle_command_response(data: Dictionary):
+	var message = data.get("message", "")
+	var is_error = data.get("is_error", false)
+
+	command_response_received.emit(message, is_error)
+
+
 # Client -> Server messages
 
 func connect_to_server():
@@ -151,7 +195,7 @@ func connect_to_server():
 
 func join_barton(username: String, avatar_url: String, barton_id: int, map_id: int, position: Vector2):
 	print("[DEBUG] Sending join_barton with username: ", username, " keycode: ", UserSession.keycode if UserSession else "(no UserSession)")
-	
+
 	var message = {
 		"type": "join_barton",
 		"username": username,

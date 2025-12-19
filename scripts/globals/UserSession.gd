@@ -3,7 +3,7 @@ extends Node
 signal credentials_loaded(username: String, avatar_url: String)
 signal admin_status_changed(is_admin: bool)
 
-const USE_LOCAL_SERVER: bool = true
+const USE_LOCAL_SERVER: bool = false
 const LOCAL_SERVER_URL: String = "http://127.0.0.1:5000"
 const PRODUCTION_SERVER_URL: String = "https://deaddreamers.com"
 

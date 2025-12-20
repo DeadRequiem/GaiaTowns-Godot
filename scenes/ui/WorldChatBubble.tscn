@@ -1,7 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://df8a1owrw144i"]
-
-[ext_resource type="Script" uid="uid://dm5hrveiki5cd" path="res://scripts/ui/WorldChatBubble.gd" id="1"]
-
-[node name="WorldChatBubble" type="Node2D"]
-z_index = 1000
-script = ExtResource("1")

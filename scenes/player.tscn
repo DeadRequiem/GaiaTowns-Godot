@@ -1,0 +1,38 @@
+[gd_scene load_steps=4 format=3 uid="uid://bakbl1cs5klsx"]
+
+[ext_resource type="Script" uid="uid://dhe07upp4a1pf" path="res://scripts/player/player.gd" id="1_4flbx"]
+[ext_resource type="Script" uid="uid://lglkmn6d76tf" path="res://scripts/player/UsernameLabel.gd" id="4_hqtel"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_onrkg"]
+size = Vector2(122, 23)
+
+[node name="Player" type="CharacterBody2D"]
+collision_mask = 2
+script = ExtResource("1_4flbx")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 63.5)
+shape = SubResource("RectangleShape2D_onrkg")
+
+[node name="Torso" type="Sprite2D" parent="."]
+
+[node name="Legs" type="Sprite2D" parent="."]
+
+[node name="HTTPRequest" type="HTTPRequest" parent="."]
+use_threads = true
+accept_gzip = false
+
+[node name="UsernameLabel" type="Label" parent="."]
+offset_left = -70.0
+offset_top = 76.0
+offset_right = 70.0
+offset_bottom = 99.0
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 12
+text = "TestUsername"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
+max_lines_visible = 1
+script = ExtResource("4_hqtel")
